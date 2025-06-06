@@ -1,7 +1,7 @@
 # About this project
 This project is a website for a Discord server, built with Python and the Flask framework. It acts as an interface between the Discord bot, the website, and related services, centralizing management and community interaction while simplifying the integration of new features.
 # Features
-- **User Authentication**: Secure login and registration system.
+- **User Authentication**: Secure login and registration system thanks to OIDC.
 - **Discord Integration**: Seamless connection with Discord for real-time updates and interactions.
 - **Admin Dashboard**: Manage server settings, user roles, and permissions.
 - **Community Engagement**: Forums, announcements, and event management. (I need to have a reflection on this)
