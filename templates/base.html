@@ -2,32 +2,29 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}SaucisseLand{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 </head>
 <body>
+
     <header>
         <nav class="navbar">
             <div class="logo">SaucisseLand</div>
-            <button class="menu-toggle" aria-label="Ouvrir le menu">&#9776;</button>
+            <button class="menu-toggle">&#9776;</button>
             <ul class="nav-links">
                 <li><a href="/">Accueil</a></li>
                 <li><a href="/legal">Mentions légales</a></li>
                 <li><a href="/contact">Contact</a></li>
                 <li><a href="https://discord.gg/zxhz4pppNA">Rejoindre le Discord</a></li>
-
             </ul>
         </nav>
     </header>
 
     <main>
-        {% block content %}
-        <!-- Contenu spécifique à chaque page -->
-        {% endblock %}
+        {% block content %}{% endblock %}
     </main>
-
 
     <footer>
         <p>Fait avec ❤️ par SaucisseLand</p>
@@ -35,10 +32,8 @@
     </footer>
 
 <script>
-    const menuToggle = document.querySelector('.menu-toggle');
-    const navLinks = document.querySelector('.nav-links');
-    menuToggle.addEventListener('click', () => {
-        navLinks.classList.toggle('active');
+    document.querySelector('.menu-toggle').addEventListener('click', () => {
+        document.querySelector('.nav-links').classList.toggle('active');
     });
 </script>
 </body>

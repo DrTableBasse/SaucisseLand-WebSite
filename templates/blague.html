@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Contact{% endblock %}
+
+{% block content %}
+    <h1>Blague du jour</h1>
+
+    {% if blague %}
+        <p><strong>Blague :</strong> {{ blague }}</p>
+    {% else %}
+        <p>Aucune blague disponible.</p>
+    {% endif %}
+
+    {% if reponse %}
+        <p><strong>Réponse :</strong> {{ reponse }}</p>
+    {% endif %}
+{% endblock %}
