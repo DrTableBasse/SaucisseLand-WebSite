@@ -1,4 +1,4 @@
-import os
+
 
 from src.saucisseland import create_app
 
