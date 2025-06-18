@@ -1,3 +1,20 @@
-<h1>{{ article['title'] }}</h1>
-<p>{{ article['content'] }}</p>
-<small>Publié le {{ article['created_at'] }}</small>
+<!DOCTYPE html>
+{% extends "base.html" %}
+
+{% block title %}Accueil - SaucisseLand{% endblock %}
+
+{% block content %}
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>{{ article['titre'] }}</title>
+</head>
+<body>
+    <h1>{{ article['titre'] }}</h1>
+    <div>
+      {{ contenu_html|safe }}
+    </div>
+    <p>Publié le {{ article['date_publication'] }}</p>
+</body>
+</html>
+{% endblock %}

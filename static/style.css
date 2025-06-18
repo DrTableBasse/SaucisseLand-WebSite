@@ -121,3 +121,35 @@ legal-title {
     margin-top: 1.5rem;
     color: #ba2e2e;
 }
+
+.markdown-content {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3 {
+    color: #222;
+    margin-top: 1.5em;
+}
+
+.markdown-content pre {
+    background: #f4f4f4;
+    padding: 1em;
+    overflow-x: auto;
+}
+
+.markdown-content code {
+    background: #eee;
+    padding: 2px 4px;
+    font-family: monospace;
+}
+
+.markdown-content blockquote {
+    border-left: 4px solid #ccc;
+    padding-left: 1em;
+    color: #666;
+    font-style: italic;
+}

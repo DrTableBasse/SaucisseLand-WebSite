@@ -6,10 +6,12 @@ Ce fichier définit les pages publiques, l'ajout d'articles, et l'intégration d
 import os
 import random
 import sqlite3
+from datetime import datetime
 
 from flask import Blueprint, render_template, request, redirect, url_for
 from dotenv import load_dotenv
 import requests
+import markdown
 
 load_dotenv()
 
@@ -50,22 +52,20 @@ def contact():
     return render_template("contact.html")
 
 
-@api.route("/test-blague")
-def test_blague():
-    """Appelle l'API Blagues et affiche une blague aléatoire."""
-    token = os.getenv("BLAGUES_API_TOKEN")
-    headers = {"Authorization": f"Bearer {token}"}
-    try:
-        response = requests.get(
-            "https://www.blagues-api.fr/api/random", headers=headers, timeout=5
-        )
-        response.raise_for_status()
-        data = response.json()
-        blague = data.get("joke") or data.get("title") or "Blague non disponible"
-        reponse = data.get("answer") or data.get("content") or ""
-        return render_template("blague.html", blague=blague, reponse=reponse)
-    except requests.RequestException as e:
-        return f"Erreur lors de la récupération de la blague : {e}"
+# @api.route("/test-blague")
+# def test_blague():
+#     """Appelle l'API Blagues et affiche une blague aléatoire."""
+#     token = os.getenv("BLAGUES_API_TOKEN")
+#     headers = {"Authorization": f"Bearer {token}"}
+#     try:
+#         response = requests.get("https://www.blagues-api.fr/api/random", headers=headers, timeout=5)
+#         response.raise_for_status()
+#         data = response.json()
+#         blague = data.get("joke") or data.get("title") or "Blague non disponible"
+#         reponse = data.get("answer") or data.get("content") or ""
+#         return render_template("blague.html", blague=blague, reponse=reponse)
+#     except requests.RequestException as e:
+#         return f"Erreur lors de la récupération de la blague : {e}"
 
 
 def get_db_connection():
@@ -77,7 +77,7 @@ def get_db_connection():
 
 @main.route("/nouvel-article", methods=["GET", "POST"])
 def nouvel_article():
-    """Affiche un formulaire de création d'article et enregistre un nouvel article."""
+    """Affiche un formulaire de création d'article et enregistre un nouvel article"""
     if request.method == "POST":
         titre = request.form["title"]
         contenu = request.form["content"]
@@ -85,7 +85,8 @@ def nouvel_article():
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute(
-            "INSERT INTO articles (title, content) VALUES (?, ?)", (titre, contenu)
+            "INSERT INTO articles (title, content, created_at) VALUES (?, ?, ?)",
+            (titre, contenu, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         )
         article_id = cur.lastrowid
         conn.commit()
@@ -109,7 +110,7 @@ def nouvel_article():
 
         return redirect(url_for("main.afficher_article", article_id=article_id))
 
-    return render_template("nouvel_article.html")
+    return render_template("nouvel_article.html", article=None)
 
 
 @main.route("/articles/<int:article_id>")
@@ -124,4 +125,11 @@ def afficher_article(article_id):
     if article is None:
         return render_template("404.html"), 404
 
-    return render_template("article.html", article=article)
+    content_html = markdown.markdown(article["content"])
+    return render_template("article.html", article=article, content_html=content_html)
+
+
+# Gestion d'erreurs personnalisée
+@main.app_errorhandler(404)
+def page_not_found(e):
+    return render_template("404.html"), 404
