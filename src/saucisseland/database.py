@@ -1,5 +1,6 @@
 import sqlite3
 
+
 def get_server_info():
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()

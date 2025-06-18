@@ -13,15 +13,15 @@ import requests
 
 load_dotenv()
 
-api = Blueprint('api', __name__)
-main = Blueprint('main', __name__)
+api = Blueprint("api", __name__)
+main = Blueprint("main", __name__)
 
 messages = [
     "Le serveur Discord des amateurs de charcuterie numérique.",
     "Le QG des passionnés de saucissons et pixels.",
     "Le repaire des geeks qui aiment la bonne bouffe.",
     "Rejoignez la saucisse révolution numérique !",
-    "La communauté où le fun et la charcuterie se rencontrent."
+    "La communauté où le fun et la charcuterie se rencontrent.",
 ]
 
 
@@ -56,7 +56,9 @@ def test_blague():
     token = os.getenv("BLAGUES_API_TOKEN")
     headers = {"Authorization": f"Bearer {token}"}
     try:
-        response = requests.get("https://www.blagues-api.fr/api/random", headers=headers, timeout=5)
+        response = requests.get(
+            "https://www.blagues-api.fr/api/random", headers=headers, timeout=5
+        )
         response.raise_for_status()
         data = response.json()
         blague = data.get("joke") or data.get("title") or "Blague non disponible"
@@ -75,14 +77,16 @@ def get_db_connection():
 
 @main.route("/nouvel-article", methods=["GET", "POST"])
 def nouvel_article():
-    """Affiche un formulaire de création d'article et enregistre un nouvel article s'il est soumis."""
+    """Affiche un formulaire de création d'article et enregistre un nouvel article"""
     if request.method == "POST":
         titre = request.form["title"]
         contenu = request.form["content"]
 
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("INSERT INTO articles (title, content) VALUES (?, ?)", (titre, contenu))
+        cur.execute(
+            "INSERT INTO articles (title, content) VALUES (?, ?)", (titre, contenu)
+        )
         article_id = cur.lastrowid
         conn.commit()
         conn.close()
@@ -112,7 +116,9 @@ def nouvel_article():
 def afficher_article(article_id):
     """Affiche un article spécifique par son ID."""
     conn = get_db_connection()
-    article = conn.execute("SELECT * FROM articles WHERE id = ?", (article_id,)).fetchone()
+    article = conn.execute(
+        "SELECT * FROM articles WHERE id = ?", (article_id,)
+    ).fetchone()
     conn.close()
 
     if article is None:
