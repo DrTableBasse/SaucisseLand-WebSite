@@ -1,0 +1,19 @@
+<!-- templates/404.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Erreur 404</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='404.css') }}">
+</head>
+<body>
+    <div class="noise"></div>
+    <div class="overlay"></div>
+    <div class="terminal">
+        <h1>Erreur <span class="errorcode">404</span></h1>
+        <p class="output">La page que vous recherchez peut avoir été supprimée, avoir changé de nom ou être temporairement indisponible.</p>
+        <p class="output">Essayer de <a href="#" onclick="history.back()">revenir en arrière</a> ou <a href="{{ url_for('main.index') }}">retourner à la page d'accueil</a>.</p>
+        <p class="output">Bonne chance.</p>
+    </div>
+</body>
+</html>
