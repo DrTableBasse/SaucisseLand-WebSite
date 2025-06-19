@@ -80,13 +80,16 @@ def nouvel_article():
     """Affiche un formulaire de création d'article et enregistre un nouvel article"""
     if request.method == "POST":
         titre = request.form["title"]
-        contenu = request.form["content"]
+        contenu_markdown = request.form["content"]
+        
+        # Convertir le Markdown en HTML
+        contenu_html = markdown.markdown(contenu_markdown)
 
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute(
-            "INSERT INTO articles (title, content, created_at) VALUES (?, ?, ?)",
-            (titre, contenu, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            "INSERT INTO articles (title, content, content_html, created_at) VALUES (?, ?, ?, ?)",
+            (titre, contenu_markdown, contenu_html, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         )
         article_id = cur.lastrowid
         conn.commit()
@@ -125,7 +128,13 @@ def afficher_article(article_id):
     if article is None:
         return render_template("404.html"), 404
 
-    content_html = markdown.markdown(article["content"])
+    # Utiliser l'HTML stocké s'il existe, sinon convertir le Markdown
+    if article["content_html"]:
+        content_html = article["content_html"]
+    else:
+        # Fallback pour les anciens articles
+        content_html = markdown.markdown(article["content"])
+    
     return render_template("article.html", article=article, content_html=content_html)
 
 

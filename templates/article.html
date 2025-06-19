@@ -1,20 +1,17 @@
-<!DOCTYPE html>
 {% extends "base.html" %}
 
-{% block title %}Accueil - SaucisseLand{% endblock %}
+{% block title %}{{ article['title'] }} - SaucisseLand{% endblock %}
 
 {% block content %}
-<html lang="fr">
-<head>
-    <meta charset="UTF-8" />
-    <title>{{ article['titre'] }}</title>
-</head>
-<body>
-    <h1>{{ article['titre'] }}</h1>
-    <div>
-      {{ contenu_html|safe }}
+<div style="max-width: 800px; margin: 0 auto; padding: 20px;">
+    <h1>{{ article['title'] }}</h1>
+    
+    <div class="markdown-content">
+        {{ content_html|safe }}
     </div>
-    <p>Publié le {{ article['date_publication'] }}</p>
-</body>
-</html>
+    
+    <p style="color: #666; font-style: italic; margin-top: 30px;">
+        Publié le {{ article['created_at'] }}
+    </p>
+</div>
 {% endblock %}

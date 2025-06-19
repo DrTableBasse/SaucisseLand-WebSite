@@ -1,13 +1,150 @@
 {% extends "base.html" %}
 
-{% block title %}Accueil - SaucisseLand{% endblock %}
+{% block title %}Nouvel Article - SaucisseLand{% endblock %}
 
 {% block content %}
+<div style="max-width: 1600px; margin: 0 auto; padding: 20px;">
+    <h1>Nouvel Article</h1>
+    
+    <form method="post" style="display: flex; gap: 20px;">
+        <!-- Colonne d'aide Markdown -->
+        <div style="flex: 0 0 300px; background: #f8f9fa; padding: 15px; border-radius: 8px; height: fit-content; position: sticky; top: 20px;">
+            <h3>💡 Aide Markdown</h3>
+            <div style="border-left: 3px solid #bd20bd; padding-left: 10px; margin: 10px 0;">
+                <p><strong>Formatage de base :</strong></p>
+                <ul style="list-style-type: none; padding-left: 0;">
+                    <li style="margin-bottom: 8px;"><code>**texte**</code> = <strong>gras</strong></li>
+                    <li style="margin-bottom: 8px;"><code>*texte*</code> = <em>italique</em></li>
+                    <li style="margin-bottom: 8px;"><code># Titre</code> = titre principal</li>
+                    <li style="margin-bottom: 8px;"><code>## Sous-titre</code> = sous-titre</li>
+                    <li style="margin-bottom: 8px;"><code>[lien](url)</code> = lien cliquable</li>
+                    <li style="margin-bottom: 8px;"><code>![alt](url)</code> = image</li>
+                </ul>
+            </div>
+            <div style="border-left: 3px solid #bd20bd; padding-left: 10px; margin: 10px 0;">
+                <p><strong>Listes :</strong></p>
+                <ul style="list-style-type: none; padding-left: 0;">
+                    <li style="margin-bottom: 8px;"><code>* item</code> = liste à puces</li>
+                    <li style="margin-bottom: 8px;"><code>1. item</code> = liste numérotée</li>
+                </ul>
+            </div>
+            <div style="border-left: 3px solid #bd20bd; padding-left: 10px; margin: 10px 0;">
+                <p><strong>Autres :</strong></p>
+                <ul style="list-style-type: none; padding-left: 0;">
+                    <li style="margin-bottom: 8px;"><code>---</code> = ligne horizontale</li>
+                    <li style="margin-bottom: 8px;"><code>> texte</code> = citation</li>
+                    <li style="margin-bottom: 8px;"><code>`code`</code> = <code>code inline</code></li>
+                </ul>
+            </div>
+        </div>
 
-<h1>Nouvel Article</h1>
-<form method="post">
-    <input type="text" name="title" placeholder="Titre" required><br>
-    <textarea name="content" placeholder="Contenu" required></textarea><br>
-    <button type="submit">Publier</button>
-</form>
+        <!-- Contenu principal -->
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
+            <div>
+                <label for="title" style="display: block; margin-bottom: 5px; font-weight: bold;">Titre de l'article :</label>
+                <input type="text" id="title" name="title" placeholder="Entrez le titre de votre article" required 
+                       style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px;">
+            </div>
+            
+            <div style="display: flex; gap: 20px;">
+                <!-- Zone d'édition -->
+                <div style="flex: 1;">
+                    <label for="content" style="display: block; margin-bottom: 5px; font-weight: bold;">✏️ Édition (Markdown) :</label>
+                    <textarea id="content" name="content" placeholder="Écrivez votre article en Markdown ici..." required
+                              style="width: 100%; height: 600px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 14px; resize: vertical; line-height: 1.6; text-align: left; spellcheck: false;"></textarea>
+                </div>
+                
+                <!-- Prévisualisation -->
+                <div style="flex: 1;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: bold;">👁️ Prévisualisation :</label>
+                    <div id="preview" style="width: 100%; height: 600px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; background: white; overflow-y: auto; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.6;">
+                        <em style="color: #999;">La prévisualisation apparaîtra ici...</em>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" style="background: #bd20bd; color: white; padding: 12px 24px; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; align-self: flex-start; display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 20px;">📝</span> Publier l'article
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Inclusion de marked.js -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<script>
+// Configuration de marked
+marked.setOptions({
+    gfm: true, // GitHub Flavored Markdown
+    breaks: true, // Retours à la ligne respectés
+    headerIds: false, // Pas d'ID sur les titres
+    mangle: false, // Pas de transformation des liens
+    sanitize: false, // Permettre le HTML
+    smartLists: true, // Listes intelligentes
+    smartypants: true, // Typographie intelligente
+    xhtml: false // Pas de XHTML
+});
+
+// Style CSS pour la prévisualisation
+const previewStyles = `
+<style>
+    #preview {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+    }
+    #preview h1 { font-size: 2em; margin: 0.67em 0; color: #222; }
+    #preview h2 { font-size: 1.5em; margin: 0.83em 0; color: #333; }
+    #preview h3 { font-size: 1.17em; margin: 1em 0; color: #444; }
+    #preview p { margin: 1em 0; }
+    #preview ul, #preview ol { margin: 1em 0; padding-left: 2em; }
+    #preview li { margin: 0.5em 0; }
+    #preview a { color: #bd20bd; text-decoration: none; }
+    #preview a:hover { text-decoration: underline; }
+    #preview blockquote {
+        margin: 1em 0;
+        padding-left: 1em;
+        border-left: 3px solid #bd20bd;
+        color: #666;
+    }
+    #preview code {
+        background: #f5f5f5;
+        padding: 2px 4px;
+        border-radius: 3px;
+        font-family: 'Courier New', monospace;
+    }
+    #preview hr {
+        border: none;
+        border-top: 2px solid #eee;
+        margin: 1em 0;
+    }
+    #preview img {
+        max-width: 100%;
+        height: auto;
+    }
+</style>`;
+
+// Mise à jour de la prévisualisation
+function updatePreview() {
+    const content = document.getElementById('content').value;
+    const preview = document.getElementById('preview');
+    
+    if (!content.trim()) {
+        preview.innerHTML = '<em style="color: #999;">La prévisualisation apparaîtra ici...</em>';
+        return;
+    }
+    
+    // Conversion Markdown vers HTML avec marked
+    const htmlContent = marked.parse(content);
+    preview.innerHTML = previewStyles + htmlContent;
+}
+
+// Événements
+document.getElementById('content').addEventListener('input', updatePreview);
+document.getElementById('content').addEventListener('keyup', updatePreview);
+
+// Initialisation
+updatePreview();
+</script>
 {% endblock %}

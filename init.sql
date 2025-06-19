@@ -12,5 +12,6 @@ CREATE TABLE IF NOT EXISTS articles (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
+    content_html TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
