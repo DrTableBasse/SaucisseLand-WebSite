@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: discord_blog_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-discord_blog}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-discord_blog}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: discord_blog_backend
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      BASE_URL: ${BASE_URL}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
+      DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET}
+      DISCORD_REDIRECT_URI: ${DISCORD_REDIRECT_URI:-}
+      DISCORD_GUILD_ID: ${DISCORD_GUILD_ID}
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN}
+      ALLOWED_ROLE_IDS_STR: ${ALLOWED_ROLE_IDS:-}
+      SECRET_KEY: ${SECRET_KEY}
+      CORS_ORIGINS_STR: ${CORS_ORIGINS:-}
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend/static:/app/static
+      - ./backend/templates:/app/templates
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+

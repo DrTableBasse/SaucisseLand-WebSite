@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Discord Blog{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="text-2xl font-bold text-indigo-600">Discord Blog</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="text-gray-700 hover:text-indigo-600">Articles</a>
+                    {% if user %}
+                        {% if can_create_articles %}
+                            <a href="/create" class="text-gray-700 hover:text-indigo-600">Créer un article</a>
+                        {% endif %}
+                        <a href="/debug" class="text-gray-700 hover:text-indigo-600 text-sm">Debug Rôles</a>
+                        <span class="text-gray-700">Bonjour, {{ user.username }}</span>
+                        <a href="/api/auth/logout" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Déconnexion</a>
+                    {% else %}
+                        <a href="/api/auth/login" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Connexion Discord</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <footer class="bg-white border-t mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <p class="text-center text-gray-600">&copy; 2024 Discord Blog. Tous droits réservés.</p>
+        </div>
+    </footer>
+</body>
+</html>
+

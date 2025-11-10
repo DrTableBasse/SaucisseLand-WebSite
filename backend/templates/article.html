@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article.title }} - Discord Blog{% endblock %}
+
+{% block content %}
+<article class="bg-white rounded-lg shadow-md p-8">
+    <h1 class="text-4xl font-bold text-gray-900 mb-4">{{ article.title }}</h1>
+    
+    <div class="flex items-center text-sm text-gray-500 mb-6">
+        <span>Par {{ article.author.username }}</span>
+        <span class="mx-2">•</span>
+        <span>{{ article.created_at.strftime('%d/%m/%Y') if article.created_at else '' }}</span>
+    </div>
+    
+    <div id="article-content" class="prose max-w-none">
+        <!-- Le contenu Markdown sera rendu ici -->
+    </div>
+</article>
+
+<script>
+// Rendre le Markdown
+const content = {{ article.content|tojson }};
+const html = marked.parse(content);
+document.getElementById('article-content').innerHTML = html;
+
+// Activer Prism pour le code
+Prism.highlightAll();
+</script>
+{% endblock %}
+
