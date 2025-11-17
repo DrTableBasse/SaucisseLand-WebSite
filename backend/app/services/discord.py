@@ -13,6 +13,9 @@ class DiscordService:
     
     async def exchange_code_for_token(self, code: str) -> Dict:
         """Échange le code OAuth contre un token d'accès"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
         async with aiohttp.ClientSession() as session:
             data = {
                 "client_id": self.client_id,
@@ -21,22 +24,36 @@ class DiscordService:
                 "code": code,
                 "redirect_uri": self.redirect_uri,
             }
+            logger.debug(f"Échange du code OAuth avec redirect_uri: {self.redirect_uri}")
+            
             async with session.post(
                 f"{self.api_base}/oauth2/token",
                 data=data,
                 headers={"Content-Type": "application/x-www-form-urlencoded"}
             ) as response:
-                return await response.json()
+                result = await response.json()
+                if response.status != 200:
+                    error_msg = result.get("error_description", result.get("error", "Unknown error"))
+                    logger.error(f"Erreur lors de l'échange du token (status {response.status}): {error_msg}")
+                    logger.error(f"Redirect URI utilisé: {self.redirect_uri}")
+                return result
     
     async def get_user_info(self, access_token: str) -> Dict:
         """Récupère les informations de l'utilisateur Discord"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
         async with aiohttp.ClientSession() as session:
             headers = {"Authorization": f"Bearer {access_token}"}
             async with session.get(
                 f"{self.api_base}/users/@me",
                 headers=headers
             ) as response:
-                return await response.json()
+                result = await response.json()
+                if response.status != 200:
+                    error_msg = result.get("message", "Unknown error")
+                    logger.error(f"Erreur lors de la récupération des infos utilisateur (status {response.status}): {error_msg}")
+                return result
     
     async def get_user_guild_member(self, user_id: str) -> Optional[Dict]:
         """Récupère les informations du membre dans le serveur Discord"""

@@ -7,7 +7,10 @@ from app.schemas import UserResponse
 from app.services.discord import discord_service
 from app.config import settings
 import secrets
+import logging
 from datetime import datetime, timedelta
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -17,33 +20,48 @@ sessions = {}
 @router.get("/login")
 async def login():
     """Redirige vers Discord OAuth"""
+    redirect_uri = settings.DISCORD_REDIRECT_URI_FINAL
     discord_oauth_url = (
         f"https://discord.com/api/oauth2/authorize"
         f"?client_id={settings.DISCORD_CLIENT_ID}"
-        f"&redirect_uri={settings.DISCORD_REDIRECT_URI}"
+        f"&redirect_uri={redirect_uri}"
         f"&response_type=code"
         f"&scope=identify email guilds"
     )
+    logger.info(f"Redirection vers Discord OAuth avec redirect_uri: {redirect_uri}")
     return RedirectResponse(url=discord_oauth_url)
 
 @router.get("/callback/social/discord")
 async def callback(code: str, request: Request, db: Session = Depends(get_db)):
     """Callback OAuth Discord"""
     try:
+        logger.info(f"Callback Discord reçu avec code: {code[:10]}...")
+        
         # Échanger le code contre un token
         token_data = await discord_service.exchange_code_for_token(code)
+        logger.debug(f"Réponse token exchange: {list(token_data.keys())}")
+        
         if "access_token" not in token_data:
-            raise HTTPException(status_code=400, detail="Failed to get access token")
+            error_detail = token_data.get("error_description", token_data.get("error", "Unknown error"))
+            logger.error(f"Échec de l'échange du code: {error_detail}")
+            raise HTTPException(status_code=400, detail=f"Failed to get access token: {error_detail}")
         
         access_token = token_data["access_token"]
+        logger.info("Token d'accès obtenu avec succès")
         
         # Récupérer les infos utilisateur
         user_info = await discord_service.get_user_info(access_token)
+        if "id" not in user_info:
+            logger.error(f"Informations utilisateur invalides: {user_info}")
+            raise HTTPException(status_code=400, detail="Failed to get user info from Discord")
+        
         discord_id = str(user_info["id"])
+        logger.info(f"Informations utilisateur récupérées pour Discord ID: {discord_id}")
         
         # Vérifier ou créer l'utilisateur
         user = db.query(User).filter(User.discord_id == discord_id).first()
         if not user:
+            logger.info(f"Création d'un nouvel utilisateur: {user_info.get('username')}")
             user = User(
                 discord_id=discord_id,
                 username=user_info.get("username", ""),
@@ -55,6 +73,7 @@ async def callback(code: str, request: Request, db: Session = Depends(get_db)):
             db.commit()
             db.refresh(user)
         else:
+            logger.info(f"Mise à jour de l'utilisateur existant: {user.username}")
             # Mettre à jour les infos
             user.username = user_info.get("username", user.username)
             user.avatar = user_info.get("avatar", user.avatar)
@@ -68,6 +87,7 @@ async def callback(code: str, request: Request, db: Session = Depends(get_db)):
             "discord_id": discord_id,
             "expires_at": datetime.now() + timedelta(days=7)
         }
+        logger.info(f"Session créée pour l'utilisateur {user.id}")
         
         # Rediriger avec le cookie de session
         response = RedirectResponse(url="/")
@@ -80,8 +100,12 @@ async def callback(code: str, request: Request, db: Session = Depends(get_db)):
         )
         return response
         
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Erreur dans le callback Discord: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 @router.get("/logout")
 @router.post("/logout")

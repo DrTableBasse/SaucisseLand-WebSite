@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from app.database import get_db
 from app.models import User, Article
-from app.schemas import ArticleCreate, ArticleUpdate, ArticleResponse, ArticleListResponse
+from app.schemas import ArticleCreate, ArticleUpdate, ArticleResponse, ArticleListResponse, ArticlePreview
 from app.routers.auth import get_current_user_dependency
 from app.services.discord import discord_service
 from datetime import datetime
@@ -159,4 +159,25 @@ async def delete_article(
     db.commit()
     
     return {"message": "Article deleted"}
+
+@router.post("/preview", response_model=ArticlePreview)
+async def preview_article(
+    article: ArticlePreview,
+    request: Request,
+    current_user: User = Depends(get_current_user_dependency)
+):
+    """Prévisualise un article sans le sauvegarder"""
+    # Vérifier les permissions
+    has_permission = await check_article_permission(current_user)
+    if not has_permission:
+        raise HTTPException(
+            status_code=403,
+            detail="You don't have permission to preview articles. You need one of the allowed Discord roles."
+        )
+    
+    # Générer le slug si non fourni
+    if not article.slug:
+        article.slug = slugify(article.title)
+    
+    return article
 

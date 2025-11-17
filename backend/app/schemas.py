@@ -63,6 +63,13 @@ class ArticleListResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class ArticlePreview(BaseModel):
+    """Schéma pour la prévisualisation d'un article (sans sauvegarde)"""
+    title: str
+    slug: Optional[str] = None
+    content: str
+    excerpt: Optional[str] = None
+
 class ImageResponse(BaseModel):
     id: int
     filename: str

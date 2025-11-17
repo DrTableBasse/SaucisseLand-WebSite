@@ -3,6 +3,97 @@
 {% block title %}Créer un article - Discord Blog{% endblock %}
 
 {% block content %}
+<style>
+/* Styles pour la prévisualisation Markdown */
+#preview-markdown {
+    line-height: 1.75;
+}
+#preview-markdown h1 {
+    font-size: 2.25em;
+    font-weight: 800;
+    margin-top: 0;
+    margin-bottom: 0.8888889em;
+    line-height: 1.1111111;
+}
+#preview-markdown h2 {
+    font-size: 1.5em;
+    font-weight: 700;
+    margin-top: 2em;
+    margin-bottom: 1em;
+    line-height: 1.3333333;
+}
+#preview-markdown h3 {
+    font-size: 1.25em;
+    font-weight: 600;
+    margin-top: 1.6em;
+    margin-bottom: 0.6em;
+    line-height: 1.6;
+}
+#preview-markdown p {
+    margin-top: 1.25em;
+    margin-bottom: 1.25em;
+}
+#preview-markdown ul, #preview-markdown ol {
+    margin-top: 1.25em;
+    margin-bottom: 1.25em;
+    padding-left: 1.625em;
+}
+#preview-markdown li {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+}
+#preview-markdown code {
+    font-size: 0.875em;
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 0.25em 0.375em;
+    border-radius: 0.25rem;
+}
+#preview-markdown pre {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 1em;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin-top: 1.25em;
+    margin-bottom: 1.25em;
+}
+#preview-markdown pre code {
+    background-color: transparent;
+    padding: 0;
+}
+#preview-markdown blockquote {
+    border-left: 4px solid #e5e7eb;
+    padding-left: 1em;
+    margin: 1.25em 0;
+    font-style: italic;
+    color: #6b7280;
+}
+#preview-markdown img {
+    max-width: 100%;
+    height: auto;
+    margin: 1.25em 0;
+    border-radius: 0.5rem;
+}
+#preview-markdown a {
+    color: #4f46e5;
+    text-decoration: underline;
+}
+#preview-markdown a:hover {
+    color: #4338ca;
+}
+#preview-markdown table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.25em 0;
+}
+#preview-markdown th, #preview-markdown td {
+    border: 1px solid #e5e7eb;
+    padding: 0.5em;
+}
+#preview-markdown th {
+    background-color: #f9fafb;
+    font-weight: 600;
+}
+</style>
 <div class="bg-white rounded-lg shadow-md p-8">
     <h1 class="text-3xl font-bold text-gray-900 mb-6">Créer un nouvel article</h1>
     
@@ -40,6 +131,9 @@
         </div>
         
         <div class="flex space-x-4">
+            <button type="button" id="preview-btn" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700">
+                Prévisualiser
+            </button>
             <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700">
                 Créer l'article
             </button>
@@ -56,6 +150,23 @@
             Uploader l'image
         </button>
         <div id="upload-result" class="mt-4"></div>
+    </div>
+</div>
+
+<!-- Modal de prévisualisation -->
+<div id="preview-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold text-gray-900">Prévisualisation de l'article</h2>
+            <button id="close-preview" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div id="preview-content" class="max-h-[70vh] overflow-y-auto">
+            <!-- Le contenu de la prévisualisation sera inséré ici -->
+        </div>
     </div>
 </div>
 
@@ -113,6 +224,94 @@ async function uploadImage() {
             `<p class="text-red-600">Erreur: ${error.message}</p>`;
     }
 }
+
+// Fonction de prévisualisation
+async function previewArticle() {
+    const title = document.getElementById('title').value;
+    const slug = document.getElementById('slug').value;
+    const content = document.getElementById('content').value;
+    const excerpt = document.getElementById('excerpt').value;
+    
+    // Validation basique
+    if (!title || !slug || !content) {
+        alert('Veuillez remplir au moins le titre, le slug et le contenu pour prévisualiser.');
+        return;
+    }
+    
+    const previewData = {
+        title: title,
+        slug: slug,
+        content: content,
+        excerpt: excerpt || null
+    };
+    
+    try {
+        const response = await fetch('/api/articles/preview', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(previewData)
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Erreur lors de la prévisualisation');
+        }
+        
+        const article = await response.json();
+        
+        // Afficher la prévisualisation
+        const previewContent = document.getElementById('preview-content');
+        const html = `
+            <article class="bg-white rounded-lg shadow-md p-8">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">${escapeHtml(article.title)}</h1>
+                ${article.excerpt ? `<p class="text-gray-600 text-lg mb-6 italic">${escapeHtml(article.excerpt)}</p>` : ''}
+                <div id="preview-markdown" class="prose max-w-none">
+                    <!-- Le contenu Markdown sera rendu ici -->
+                </div>
+            </article>
+        `;
+        previewContent.innerHTML = html;
+        
+        // Rendre le Markdown
+        const markdownContent = article.content;
+        const markdownHtml = marked.parse(markdownContent);
+        document.getElementById('preview-markdown').innerHTML = markdownHtml;
+        
+        // Activer Prism pour le code
+        if (typeof Prism !== 'undefined') {
+            Prism.highlightAll();
+        }
+        
+        // Afficher la modal
+        document.getElementById('preview-modal').classList.remove('hidden');
+    } catch (error) {
+        alert('Erreur: ' + error.message);
+    }
+}
+
+// Fonction pour échapper le HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Bouton de prévisualisation
+document.getElementById('preview-btn').addEventListener('click', previewArticle);
+
+// Fermer la modal
+document.getElementById('close-preview').addEventListener('click', function() {
+    document.getElementById('preview-modal').classList.add('hidden');
+});
+
+// Fermer la modal en cliquant en dehors
+document.getElementById('preview-modal').addEventListener('click', function(e) {
+    if (e.target.id === 'preview-modal') {
+        document.getElementById('preview-modal').classList.add('hidden');
+    }
+});
 
 // Soumettre le formulaire
 document.getElementById('article-form').addEventListener('submit', async function(e) {
