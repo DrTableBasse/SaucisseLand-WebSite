@@ -1,18 +1,43 @@
+"""Service pour interagir avec l'API Discord."""
+import logging
+from typing import Dict, List, Optional
+
 import aiohttp
-from typing import Optional, List, Dict
+
 from app.config import settings
 
+logger = logging.getLogger(__name__)
+
+
 class DiscordService:
+    """Service pour les interactions avec Discord API."""
+
     def __init__(self):
+        """Initialise le service Discord avec les credentials."""
         self.client_id = settings.DISCORD_CLIENT_ID
         self.client_secret = settings.DISCORD_CLIENT_SECRET
-        self.redirect_uri = settings.DISCORD_REDIRECT_URI_FINAL
+        # Utiliser DISCORD_REDIRECT_URI si défini, sinon utiliser localhost
+        if settings.DISCORD_REDIRECT_URI:
+            self.redirect_uri = settings.DISCORD_REDIRECT_URI
+        else:
+            # Par défaut, utiliser localhost pour que ça fonctionne sur tous les PC
+            self.redirect_uri = "http://localhost:8000/api/auth/callback/social/discord"
         self.bot_token = settings.DISCORD_BOT_TOKEN
         self.guild_id = settings.DISCORD_GUILD_ID
         self.api_base = "https://discord.com/api/v10"
     
     async def exchange_code_for_token(self, code: str) -> Dict:
-        """Échange le code OAuth contre un token d'accès"""
+        """Échange le code OAuth contre un token d'accès.
+
+        Args:
+            code: Code d'autorisation retourné par Discord
+
+        Returns:
+            Dict: Dictionnaire contenant le token d'accès et autres infos
+
+        Raises:
+            ValueError: Si l'échange échoue
+        """
         async with aiohttp.ClientSession() as session:
             data = {
                 "client_id": self.client_id,
@@ -21,27 +46,69 @@ class DiscordService:
                 "code": code,
                 "redirect_uri": self.redirect_uri,
             }
+            logger.info(
+                f"Échange du code OAuth avec redirect_uri: {self.redirect_uri}"
+            )
+            logger.info(
+                f"Client ID: {self.client_id[:10]}..., "
+                f"Redirect URI: {self.redirect_uri}"
+            )
             async with session.post(
                 f"{self.api_base}/oauth2/token",
                 data=data,
-                headers={"Content-Type": "application/x-www-form-urlencoded"}
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
             ) as response:
-                return await response.json()
+                response_data = await response.json()
+                if response.status != 200:
+                    error_msg = response_data.get(
+                        "error_description",
+                        response_data.get("error", "Unknown error"),
+                    )
+                    logger.error(
+                        f"Erreur lors de l'échange du code OAuth: {error_msg} "
+                        f"(status: {response.status})"
+                    )
+                    raise ValueError(f"Discord OAuth error: {error_msg}")
+                return response_data
     
     async def get_user_info(self, access_token: str) -> Dict:
-        """Récupère les informations de l'utilisateur Discord"""
+        """Récupère les informations de l'utilisateur Discord.
+
+        Args:
+            access_token: Token d'accès OAuth
+
+        Returns:
+            Dict: Informations de l'utilisateur Discord
+
+        Raises:
+            ValueError: Si la récupération échoue
+        """
         async with aiohttp.ClientSession() as session:
             headers = {"Authorization": f"Bearer {access_token}"}
             async with session.get(
-                f"{self.api_base}/users/@me",
-                headers=headers
+                f"{self.api_base}/users/@me", headers=headers
             ) as response:
-                return await response.json()
+                response_data = await response.json()
+                if response.status != 200:
+                    error_msg = response_data.get(
+                        "message", response_data.get("error", "Unknown error")
+                    )
+                    logger.error(
+                        f"Erreur lors de la récupération des infos utilisateur: "
+                        f"{error_msg} (status: {response.status})"
+                    )
+                    raise ValueError(f"Discord API error: {error_msg}")
+                return response_data
     
     async def get_user_guild_member(self, user_id: str) -> Optional[Dict]:
-        """Récupère les informations du membre dans le serveur Discord"""
-        import logging
-        logger = logging.getLogger(__name__)
+        """Récupère les informations du membre dans le serveur Discord.
+
+        Args:
+            user_id: ID Discord de l'utilisateur
+
+        Returns:
+            Optional[Dict]: Informations du membre ou None si non trouvé
+        """
         
         async with aiohttp.ClientSession() as session:
             headers = {"Authorization": f"Bot {self.bot_token}"}
@@ -74,9 +141,14 @@ class DiscordService:
                 return None
     
     async def get_user_roles(self, user_id: str) -> List[str]:
-        """Récupère la liste des rôles de l'utilisateur"""
-        import logging
-        logger = logging.getLogger(__name__)
+        """Récupère la liste des rôles de l'utilisateur.
+
+        Args:
+            user_id: ID Discord de l'utilisateur
+
+        Returns:
+            List[str]: Liste des IDs de rôles de l'utilisateur
+        """
         
         member = await self.get_user_guild_member(user_id)
         if not member:
@@ -91,9 +163,14 @@ class DiscordService:
         return roles
     
     async def check_user_has_allowed_role(self, user_id: str) -> bool:
-        """Vérifie si l'utilisateur a un des rôles autorisés"""
-        import logging
-        logger = logging.getLogger(__name__)
+        """Vérifie si l'utilisateur a un des rôles autorisés.
+
+        Args:
+            user_id: ID Discord de l'utilisateur
+
+        Returns:
+            bool: True si l'utilisateur a un rôle autorisé, False sinon
+        """
         
         member = await self.get_user_guild_member(user_id)
         if not member:

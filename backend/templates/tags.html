@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Gérer les tags - Discord Blog{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-md p-4 sm:p-6 lg:p-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Gérer les tags</h1>
+        <button onclick="showCreateTagModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 text-sm sm:text-base">
+            + Créer un tag
+        </button>
+    </div>
+    
+    <div id="tags-list" class="space-y-4">
+        <!-- Les tags seront chargés ici via JavaScript -->
+    </div>
+</div>
+
+<!-- Modal de création/édition de tag -->
+<div id="tag-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <h2 id="modal-title" class="text-xl font-bold text-gray-900 mb-4">Créer un tag</h2>
+        <form id="tag-form" class="space-y-4">
+            <input type="hidden" id="tag-id">
+            <div>
+                <label for="tag-name" class="block text-sm font-medium text-gray-700 mb-2">Nom</label>
+                <input type="text" id="tag-name" required
+                       class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label for="tag-slug" class="block text-sm font-medium text-gray-700 mb-2">Slug (optionnel)</label>
+                <input type="text" id="tag-slug"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                <p class="mt-1 text-xs text-gray-500">Généré automatiquement si vide</p>
+            </div>
+            <div>
+                <label for="tag-description" class="block text-sm font-medium text-gray-700 mb-2">Description (optionnel)</label>
+                <textarea id="tag-description" rows="3"
+                          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+            </div>
+            <div>
+                <label for="tag-color" class="block text-sm font-medium text-gray-700 mb-2">Couleur</label>
+                <div class="flex items-center gap-2">
+                    <input type="color" id="tag-color" value="#3b82f6"
+                           class="w-16 h-10 border border-gray-300 rounded-md cursor-pointer">
+                    <input type="text" id="tag-color-text" value="#3b82f6"
+                           class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-4">
+                <button type="button" onclick="hideTagModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                    Annuler
+                </button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                    Enregistrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Synchroniser les deux champs de couleur
+document.getElementById('tag-color').addEventListener('input', function(e) {
+    document.getElementById('tag-color-text').value = e.target.value;
+});
+document.getElementById('tag-color-text').addEventListener('input', function(e) {
+    const color = e.target.value;
+    if (/^#[0-9A-F]{6}$/i.test(color)) {
+        document.getElementById('tag-color').value = color;
+    }
+});
+
+// Charger les tags
+async function loadTags() {
+    try {
+        const response = await fetch('/api/tags/');
+        if (!response.ok) throw new Error('Erreur lors du chargement des tags');
+        const tags = await response.json();
+        
+        const container = document.getElementById('tags-list');
+        if (tags.length === 0) {
+            container.innerHTML = '<p class="text-gray-500 text-center py-8">Aucun tag créé pour le moment.</p>';
+            return;
+        }
+        
+        container.innerHTML = tags.map(tag => `
+            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium" 
+                                  style="background-color: ${tag.color || '#3b82f6'}20; color: ${tag.color || '#3b82f6'};">
+                                ${tag.name}
+                            </span>
+                            <span class="text-xs text-gray-500 font-mono">${tag.slug}</span>
+                        </div>
+                        ${tag.description ? `<p class="text-sm text-gray-600">${tag.description}</p>` : ''}
+                        <p class="text-xs text-gray-500 mt-1">Créé le ${new Date(tag.created_at).toLocaleDateString('fr-FR')}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="editTag(${tag.id})" class="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
+                            Modifier
+                        </button>
+                        <button onclick="deleteTag(${tag.id})" class="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm">
+                            Supprimer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Erreur lors du chargement des tags:', error);
+        document.getElementById('tags-list').innerHTML = 
+            '<p class="text-red-600">Erreur lors du chargement des tags.</p>';
+    }
+}
+
+// Afficher le modal de création
+function showCreateTagModal() {
+    document.getElementById('modal-title').textContent = 'Créer un tag';
+    document.getElementById('tag-form').reset();
+    document.getElementById('tag-id').value = '';
+    document.getElementById('tag-color').value = '#3b82f6';
+    document.getElementById('tag-color-text').value = '#3b82f6';
+    document.getElementById('tag-modal').classList.remove('hidden');
+}
+
+// Afficher le modal d'édition
+async function editTag(tagId) {
+    try {
+        const response = await fetch(`/api/tags/${tagId}`);
+        if (!response.ok) throw new Error('Erreur lors du chargement du tag');
+        const tag = await response.json();
+        
+        document.getElementById('modal-title').textContent = 'Modifier le tag';
+        document.getElementById('tag-id').value = tag.id;
+        document.getElementById('tag-name').value = tag.name;
+        document.getElementById('tag-slug').value = tag.slug || '';
+        document.getElementById('tag-description').value = tag.description || '';
+        document.getElementById('tag-color').value = tag.color || '#3b82f6';
+        document.getElementById('tag-color-text').value = tag.color || '#3b82f6';
+        document.getElementById('tag-modal').classList.remove('hidden');
+    } catch (error) {
+        alert('Erreur: ' + error.message);
+    }
+}
+
+// Masquer le modal
+function hideTagModal() {
+    document.getElementById('tag-modal').classList.add('hidden');
+}
+
+// Soumettre le formulaire
+document.getElementById('tag-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const tagId = document.getElementById('tag-id').value;
+    const formData = {
+        name: document.getElementById('tag-name').value,
+        slug: document.getElementById('tag-slug').value || null,
+        description: document.getElementById('tag-description').value || null,
+        color: document.getElementById('tag-color').value
+    };
+    
+    try {
+        const url = tagId ? `/api/tags/${tagId}` : '/api/tags/';
+        const method = tagId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Erreur lors de l\'enregistrement');
+        }
+        
+        hideTagModal();
+        loadTags();
+    } catch (error) {
+        alert('Erreur: ' + error.message);
+    }
+});
+
+// Supprimer un tag
+async function deleteTag(tagId) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce tag ?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/tags/${tagId}`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Erreur lors de la suppression');
+        }
+        
+        loadTags();
+    } catch (error) {
+        alert('Erreur: ' + error.message);
+    }
+}
+
+// Charger les tags au chargement de la page
+loadTags();
+</script>
+{% endblock %}
+

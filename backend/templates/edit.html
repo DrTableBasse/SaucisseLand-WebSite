@@ -1,29 +1,32 @@
 {% extends "base.html" %}
 
-{% block title %}Créer un article - Discord Blog{% endblock %}
+{% block title %}Modifier l'article - Discord Blog{% endblock %}
 
 {% block content %}
 <div class="bg-white rounded-lg shadow-md p-4 sm:p-6 lg:p-8">
-    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">Créer un nouvel article</h1>
+    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">Modifier l'article</h1>
     
     <form id="article-form" class="space-y-6">
+        <input type="hidden" id="article-id" value="{{ article.id }}">
         <div>
             <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Titre</label>
             <input type="text" id="title" name="title" required
-                   class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                   class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                   value="{{ article.title }}">
         </div>
         
         <div>
             <label for="slug" class="block text-sm font-medium text-gray-700 mb-2">Slug (URL)</label>
             <input type="text" id="slug" name="slug" required
-                   class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                   class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                   value="{{ article.slug }}">
             <p class="mt-1 text-sm text-gray-500">L'URL de votre article (ex: mon-premier-article)</p>
         </div>
         
         <div>
             <label for="excerpt" class="block text-sm font-medium text-gray-700 mb-2">Résumé</label>
             <textarea id="excerpt" name="excerpt" rows="3"
-                      class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                      class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">{{ article.excerpt or '' }}</textarea>
         </div>
         
         <div>
@@ -59,7 +62,7 @@
                         <textarea id="content" name="content" rows="20" required
                                   class="flex-1 px-4 py-2 border-0 focus:ring-0 focus:outline-none font-mono text-sm resize-none"
                                   placeholder="Écrivez votre article en Markdown ici..."
-                                  style="line-height: 1.6; height: 500px;"></textarea>
+                                  style="line-height: 1.6; height: 500px;">{{ article.content }}</textarea>
                     </div>
                     <p class="mt-1 text-sm text-gray-500">Utilisez la syntaxe Markdown pour formater votre article</p>
                 </div>
@@ -76,15 +79,16 @@
         
         <div class="flex items-center">
             <input type="checkbox" id="published" name="published"
-                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                   {% if article.published %}checked{% endif %}>
             <label for="published" class="ml-2 block text-sm text-gray-700">Publier immédiatement</label>
         </div>
         
         <div class="flex flex-col sm:flex-row gap-3 sm:space-x-4">
             <button type="submit" class="bg-indigo-600 text-white px-4 sm:px-6 py-2 rounded-md hover:bg-indigo-700 text-sm sm:text-base">
-                Créer l'article
+                Enregistrer les modifications
             </button>
-            <a href="/" class="bg-gray-300 text-gray-700 px-4 sm:px-6 py-2 rounded-md hover:bg-gray-400 text-center text-sm sm:text-base">
+            <a href="/manage" class="bg-gray-300 text-gray-700 px-4 sm:px-6 py-2 rounded-md hover:bg-gray-400 text-center text-sm sm:text-base">
                 Annuler
             </a>
         </div>
@@ -104,16 +108,6 @@
 
 
 <script>
-// Générer le slug automatiquement depuis le titre
-document.getElementById('title').addEventListener('input', function(e) {
-    const slug = e.target.value
-        .toLowerCase()
-        .replace(/[^\w\s-]/g, '')
-        .replace(/[-\s]+/g, '-')
-        .trim();
-    document.getElementById('slug').value = slug;
-});
-
 // Prévisualisation Markdown en temps réel
 const contentTextarea = document.getElementById('content');
 const previewDiv = document.getElementById('preview');
@@ -128,8 +122,6 @@ marked.setOptions({
     smartLists: true,
     smartypants: true,
     highlight: function(code, lang) {
-        // Ne pas faire la coloration ici, laisser Prism le faire après
-        // On retourne juste le code brut, marked ajoutera la classe language-xxx
         return code;
     }
 });
@@ -143,14 +135,10 @@ function updatePreview() {
         const html = marked.parse(markdown);
         previewDiv.innerHTML = html;
         
-        // Activer Prism pour le code dans la prévisualisation
         if (typeof Prism !== 'undefined') {
-            // Trouver tous les blocs de code dans la prévisualisation
             const codeBlocks = previewDiv.querySelectorAll('pre code');
             codeBlocks.forEach(function(block) {
-                // Marquer le bloc pour que Prism le traite
                 if (!block.classList.contains('language-none')) {
-                    // Si le bloc n'a pas de classe language-*, marked l'a peut-être mis sur le parent <pre>
                     const parent = block.parentElement;
                     if (parent && parent.tagName === 'PRE' && parent.className) {
                         const langMatch = parent.className.match(/language-(\w+)/);
@@ -159,9 +147,7 @@ function updatePreview() {
                         }
                     }
                     
-                    // Highlight avec Prism (l'autoloader chargera le langage si nécessaire)
                     if (block.className && block.className.includes('language-')) {
-                        // Utiliser un petit délai pour laisser l'autoloader charger le langage
                         setTimeout(function() {
                             Prism.highlightElement(block);
                         }, 100);
@@ -200,10 +186,11 @@ contentTextarea.addEventListener('paste', function() {
     }, 10);
 });
 
-// Initialiser les numéros de lignes
+// Initialiser les numéros de lignes et la prévisualisation
 updateLineNumbers();
+updatePreview();
 
-// Toggle prévisualisation (fonctionne sur tous les écrans)
+// Toggle prévisualisation
 togglePreviewBtn.addEventListener('click', function() {
     const isVisible = previewContainer.classList.contains('preview-visible');
     const isMobile = window.innerWidth < 640;
@@ -215,7 +202,6 @@ togglePreviewBtn.addEventListener('click', function() {
         } else {
             togglePreviewBtn.textContent = 'Afficher la prévisualisation';
         }
-        // Ajuster la grille pour prendre toute la largeur
         document.getElementById('editor-container').classList.remove('md:grid-cols-2');
         document.getElementById('editor-container').classList.add('md:grid-cols-1');
     } else {
@@ -226,15 +212,11 @@ togglePreviewBtn.addEventListener('click', function() {
         } else {
             togglePreviewBtn.textContent = 'Masquer la prévisualisation';
         }
-        // Remettre la grille en 2 colonnes
         document.getElementById('editor-container').classList.remove('md:grid-cols-1');
         document.getElementById('editor-container').classList.add('md:grid-cols-2');
         updatePreview();
     }
 });
-
-// Initialiser la prévisualisation
-updatePreview();
 
 // Upload d'image
 async function uploadImage() {
@@ -262,7 +244,6 @@ async function uploadImage() {
         const imageUrl = `/uploads/${image.filename}`;
         const markdown = `![${image.original_filename}](${imageUrl})`;
         
-        // Insérer dans le textarea
         const content = document.getElementById('content');
         const start = content.selectionStart;
         const end = content.selectionEnd;
@@ -271,7 +252,6 @@ async function uploadImage() {
         content.focus();
         content.setSelectionRange(start + markdown.length, start + markdown.length);
         
-        // Mettre à jour la prévisualisation et les numéros de lignes
         updatePreview();
         updateLineNumbers();
         
@@ -284,10 +264,11 @@ async function uploadImage() {
     }
 }
 
-// Soumettre le formulaire
+// Soumettre le formulaire (PUT pour modification)
 document.getElementById('article-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     
+    const articleId = document.getElementById('article-id').value;
     // Récupérer les tags sélectionnés
     const selectedTags = Array.from(document.getElementById('tags-select').selectedOptions)
         .map(option => parseInt(option.value));
@@ -302,8 +283,8 @@ document.getElementById('article-form').addEventListener('submit', async functio
     };
     
     try {
-        const response = await fetch('/api/articles/', {
-            method: 'POST',
+        const response = await fetch(`/api/articles/${articleId}`, {
+            method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -312,7 +293,7 @@ document.getElementById('article-form').addEventListener('submit', async functio
         
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.detail || 'Erreur lors de la création');
+            throw new Error(error.detail || 'Erreur lors de la modification');
         }
         
         const article = await response.json();
@@ -321,6 +302,76 @@ document.getElementById('article-form').addEventListener('submit', async functio
         alert('Erreur: ' + error.message);
     }
 });
+
+// Charger les tags
+async function loadTags() {
+    try {
+        const response = await fetch('/api/tags/');
+        if (!response.ok) throw new Error('Erreur lors du chargement des tags');
+        const tags = await response.json();
+        
+        const select = document.getElementById('tags-select');
+        const articleTags = {{ article.tags | tojson | safe }};
+        const articleTagIds = articleTags.map(tag => tag.id);
+        
+        tags.forEach(tag => {
+            const option = document.createElement('option');
+            option.value = tag.id;
+            option.textContent = tag.name;
+            option.style.color = tag.color || '#3b82f6';
+            if (articleTagIds.includes(tag.id)) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+        
+        updateSelectedTags();
+    } catch (error) {
+        console.error('Erreur lors du chargement des tags:', error);
+    }
+}
+
+// Afficher les tags sélectionnés
+function updateSelectedTags() {
+    const container = document.getElementById('tags-container');
+    const select = document.getElementById('tags-select');
+    const selected = Array.from(select.selectedOptions);
+    
+    // Charger tous les tags pour obtenir leurs couleurs
+    fetch('/api/tags/')
+        .then(response => response.json())
+        .then(tags => {
+            const tagsMap = {};
+            tags.forEach(tag => {
+                tagsMap[tag.id] = tag;
+            });
+            
+            container.innerHTML = selected.map(option => {
+                const tagId = parseInt(option.value);
+                const tag = tagsMap[tagId];
+                if (!tag) return '';
+                return `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium" style="background-color: ${tag.color || '#3b82f6'}20; color: ${tag.color || '#3b82f6'};">
+                    ${tag.name}
+                    <button type="button" onclick="removeTag(${tag.id})" class="ml-2 text-gray-500 hover:text-gray-700">×</button>
+                </span>`;
+            }).join('');
+        })
+        .catch(error => console.error('Erreur lors du chargement des tags:', error));
+}
+
+function removeTag(tagId) {
+    const select = document.getElementById('tags-select');
+    const option = Array.from(select.options).find(opt => parseInt(opt.value) === tagId);
+    if (option) {
+        option.selected = false;
+        updateSelectedTags();
+    }
+}
+
+document.getElementById('tags-select').addEventListener('change', updateSelectedTags);
+
+// Charger les tags au chargement de la page
+loadTags();
 </script>
 {% endblock %}
 

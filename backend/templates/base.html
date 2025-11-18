@@ -5,33 +5,208 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Discord Blog{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
-    <nav class="bg-white shadow-lg">
+    <nav class="bg-white shadow-lg relative z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
+            <div class="flex justify-between items-center h-16">
                 <div class="flex items-center">
-                    <a href="/" class="text-2xl font-bold text-indigo-600">Discord Blog</a>
+                    <a href="/" class="text-xl sm:text-2xl font-bold text-indigo-600">Discord Blog</a>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <a href="/" class="text-gray-700 hover:text-indigo-600">Articles</a>
-                    {% if user %}
-                        {% if can_create_articles %}
-                            <a href="/create" class="text-gray-700 hover:text-indigo-600">Créer un article</a>
-                        {% endif %}
-                        <a href="/debug" class="text-gray-700 hover:text-indigo-600 text-sm">Debug Rôles</a>
-                        <span class="text-gray-700">Bonjour, {{ user.username }}</span>
-                        <a href="/api/auth/logout" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Déconnexion</a>
-                    {% else %}
-                        <a href="/api/auth/login" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Connexion Discord</a>
+                <!-- Menu desktop -->
+                <div class="hidden md:flex items-center space-x-1 lg:space-x-2">
+                    <!-- Catégorie Navigation -->
+                    <div class="relative group">
+                        <button class="text-gray-700 hover:text-indigo-600 text-sm lg:text-base px-3 py-2 rounded-md hover:bg-gray-50 flex items-center">
+                            Navigation
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div class="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-200">
+                            <div class="py-1">
+                                <a href="/" class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">Accueil</a>
+                                <a href="/" class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">Tous les articles</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if user and can_create_articles %}
+                    <!-- Catégorie Articles -->
+                    <div class="relative group">
+                        <button class="text-gray-700 hover:text-indigo-600 text-sm lg:text-base px-3 py-2 rounded-md hover:bg-gray-50 flex items-center">
+                            Articles
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div class="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-200">
+                            <div class="py-1">
+                                <a href="/create" class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">Créer un article</a>
+                                <a href="/manage" class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">Gérer les articles</a>
+                                <a href="/tags" class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">Gérer les tags</a>
+                            </div>
+                        </div>
+                    </div>
                     {% endif %}
+                    
+                    <!-- Catégorie Compte -->
+                    <div class="relative group ml-auto">
+                        <button class="text-gray-700 hover:text-indigo-600 text-sm lg:text-base px-3 py-2 rounded-md hover:bg-gray-50 flex items-center">
+                            {% if user %}
+                                <span class="hidden lg:inline mr-2">Bonjour, {{ user.username }}</span>
+                                <span class="lg:hidden">Compte</span>
+                            {% else %}
+                                Compte
+                            {% endif %}
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-200 z-50">
+                            <div class="py-1">
+                                {% if user %}
+                                    <div class="px-4 py-2 text-xs text-gray-500 border-b border-gray-200 lg:hidden">
+                                        {{ user.username }}
+                                    </div>
+                                    <a href="/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">Mon profil</a>
+                                    <a href="/liked" class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600">Mes articles aimés</a>
+                                    <a href="/api/auth/logout" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50">Déconnexion</a>
+                                {% else %}
+                                    <a href="/api/auth/login" class="block px-4 py-2 text-sm text-indigo-600 hover:bg-indigo-50">Connexion Discord</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Menu mobile -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-700 hover:text-indigo-600 focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Menu mobile déroulant -->
+            <div id="mobile-menu" class="hidden md:hidden pb-4 border-t border-gray-200 mt-2">
+                <div class="flex flex-col space-y-1 pt-4">
+                    <!-- Catégorie Navigation (mobile) -->
+                    <div class="mobile-menu-category">
+                        <button class="mobile-category-btn w-full text-left px-2 py-2 text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md flex items-center justify-between">
+                            <span>Navigation</span>
+                            <svg class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div class="mobile-submenu hidden pl-4 pt-1">
+                            <a href="/" class="block px-2 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-md">Accueil</a>
+                            <a href="/" class="block px-2 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-md">Tous les articles</a>
+                        </div>
+                    </div>
+                    
+                    {% if user and can_create_articles %}
+                    <!-- Catégorie Articles (mobile) -->
+                    <div class="mobile-menu-category">
+                        <button class="mobile-category-btn w-full text-left px-2 py-2 text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md flex items-center justify-between">
+                            <span>Articles</span>
+                            <svg class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div class="mobile-submenu hidden pl-4 pt-1">
+                            <a href="/create" class="block px-2 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-md">Créer un article</a>
+                            <a href="/manage" class="block px-2 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-md">Gérer les articles</a>
+                            <a href="/tags" class="block px-2 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-md">Gérer les tags</a>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Catégorie Compte (mobile) -->
+                    <div class="mobile-menu-category">
+                        <button class="mobile-category-btn w-full text-left px-2 py-2 text-gray-700 hover:text-indigo-600 hover:bg-gray-50 rounded-md flex items-center justify-between">
+                            <span>Compte</span>
+                            <svg class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div class="mobile-submenu hidden pl-4 pt-1">
+                            {% if user %}
+                                <div class="px-2 py-2 text-xs text-gray-500 border-b border-gray-200 mb-1">
+                                    {{ user.username }}
+                                </div>
+                                <a href="/profile" class="block px-2 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-md">Mon profil</a>
+                                <a href="/liked" class="block px-2 py-2 text-sm text-gray-600 hover:text-indigo-600 hover:bg-gray-50 rounded-md">Mes articles aimés</a>
+                                <a href="/api/auth/logout" class="block px-2 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md">Déconnexion</a>
+                            {% else %}
+                                <a href="/api/auth/login" class="block px-2 py-2 text-sm text-indigo-600 hover:bg-indigo-50 rounded-md">Connexion Discord</a>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </nav>
+    
+    <script>
+        // Toggle menu mobile principal
+        document.getElementById('mobile-menu-button')?.addEventListener('click', function() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        });
+        
+        // Toggle sous-menus mobile
+        document.querySelectorAll('.mobile-category-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const submenu = this.nextElementSibling;
+                const icon = this.querySelector('svg');
+                const isHidden = submenu.classList.contains('hidden');
+                
+                // Fermer tous les autres sous-menus
+                document.querySelectorAll('.mobile-submenu').forEach(menu => {
+                    if (menu !== submenu) {
+                        menu.classList.add('hidden');
+                    }
+                });
+                document.querySelectorAll('.mobile-category-btn svg').forEach(svg => {
+                    if (svg !== icon) {
+                        svg.classList.remove('rotate-180');
+                    }
+                });
+                
+                // Toggle le sous-menu actuel
+                if (isHidden) {
+                    submenu.classList.remove('hidden');
+                    icon.classList.add('rotate-180');
+                } else {
+                    submenu.classList.add('hidden');
+                    icon.classList.remove('rotate-180');
+                }
+            });
+        });
+        
+        // Fermer les menus au clic en dehors
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('nav')) {
+                document.querySelectorAll('.mobile-submenu').forEach(menu => {
+                    menu.classList.add('hidden');
+                });
+                document.querySelectorAll('.mobile-category-btn svg').forEach(svg => {
+                    svg.classList.remove('rotate-180');
+                });
+            }
+        });
+    </script>
     
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {% block content %}{% endblock %}

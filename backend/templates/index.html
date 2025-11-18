@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="space-y-6">
-    <h1 class="text-4xl font-bold text-gray-900">Articles</h1>
+<div class="space-y-4 sm:space-y-6">
+    <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Articles</h1>
     
-    <div id="articles-list" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div id="articles-list" class="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         <!-- Les articles seront chargés ici via JavaScript -->
     </div>
 </div>
@@ -23,12 +23,22 @@ async function loadArticles() {
         
         container.innerHTML = articles.map(article => `
             <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                <div class="p-6">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-2">
+                <div class="p-4 sm:p-6">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
                         <a href="/article/${article.slug}" class="hover:text-indigo-600">${article.title}</a>
                     </h2>
-                    ${article.excerpt ? `<p class="text-gray-600 mb-4">${article.excerpt}</p>` : ''}
-                    <div class="flex justify-between items-center text-sm text-gray-500">
+                    ${article.excerpt ? `<p class="text-sm sm:text-base text-gray-600 mb-4">${article.excerpt}</p>` : ''}
+                    ${article.tags && article.tags.length > 0 ? `
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            ${article.tags.map(tag => `
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium" 
+                                      style="background-color: ${tag.color || '#3b82f6'}20; color: ${tag.color || '#3b82f6'};">
+                                    ${tag.name}
+                                </span>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 text-xs sm:text-sm text-gray-500">
                         <span>Par ${article.author.username}</span>
                         <span>${new Date(article.created_at).toLocaleDateString('fr-FR')}</span>
                     </div>

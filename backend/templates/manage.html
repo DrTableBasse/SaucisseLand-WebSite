@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des articles - Discord Blog{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-md p-4 sm:p-6 lg:p-8">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Gestion des articles</h1>
+        <a href="/create" class="bg-indigo-600 text-white px-4 sm:px-6 py-2 rounded-md hover:bg-indigo-700 text-center text-sm sm:text-base">
+            Créer un article
+        </a>
+    </div>
+    
+    <div class="mb-4 flex flex-wrap gap-2">
+        <button id="filter-all" class="px-3 sm:px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 text-sm">
+            Tous
+        </button>
+        <button id="filter-published" class="px-3 sm:px-4 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 text-sm">
+            Publiés
+        </button>
+        <button id="filter-draft" class="px-3 sm:px-4 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 text-sm">
+            Brouillons
+        </button>
+    </div>
+    
+    <div id="articles-list" class="space-y-4">
+        <!-- Les articles seront chargés ici -->
+        <p class="text-gray-500">Chargement...</p>
+    </div>
+</div>
+
+<script>
+let allArticles = [];
+let currentFilter = 'all';
+
+// Charger tous les articles
+async function loadArticles() {
+    try {
+        const response = await fetch('/api/articles/manage/all');
+        if (!response.ok) {
+            if (response.status === 403) {
+                document.getElementById('articles-list').innerHTML = 
+                    '<p class="text-red-600">Vous n\'avez pas les permissions pour gérer les articles.</p>';
+                return;
+            }
+            throw new Error('Erreur lors du chargement');
+        }
+        
+        allArticles = await response.json();
+        displayArticles();
+    } catch (error) {
+        console.error('Erreur:', error);
+        document.getElementById('articles-list').innerHTML = 
+            '<p class="text-red-600">Erreur lors du chargement des articles.</p>';
+    }
+}
+
+// Afficher les articles selon le filtre
+function displayArticles() {
+    const container = document.getElementById('articles-list');
+    
+    let filtered = allArticles;
+    if (currentFilter === 'published') {
+        filtered = allArticles.filter(a => a.published);
+    } else if (currentFilter === 'draft') {
+        filtered = allArticles.filter(a => !a.published);
+    }
+    
+    if (filtered.length === 0) {
+        container.innerHTML = '<p class="text-gray-500">Aucun article trouvé.</p>';
+        return;
+    }
+    
+    container.innerHTML = filtered.map(article => `
+        <div class="border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-md transition-shadow">
+            <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
+                <div class="flex-1">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                        <h2 class="text-lg sm:text-xl font-bold text-gray-900">
+                            <a href="/article/${article.slug}" class="hover:text-indigo-600">${article.title}</a>
+                        </h2>
+                        ${article.published 
+                            ? '<span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded w-fit">Publié</span>'
+                            : '<span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded w-fit">Brouillon</span>'
+                        }
+                    </div>
+                    ${article.excerpt ? `<p class="text-gray-600 mb-3 text-sm sm:text-base">${article.excerpt}</p>` : ''}
+                    <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500">
+                        <span>Par ${article.author.username}</span>
+                        <span class="hidden sm:inline">•</span>
+                        <span>${new Date(article.created_at).toLocaleDateString('fr-FR')}</span>
+                        <span class="hidden sm:inline">•</span>
+                        <span>👁️ ${article.views} vues</span>
+                        <span class="hidden sm:inline">•</span>
+                        <span>❤️ ${article.likes} likes</span>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-2 lg:flex-nowrap lg:ml-4">
+                    <a href="/edit/${article.id}" class="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-md hover:bg-blue-700 text-xs sm:text-sm flex-1 lg:flex-none text-center">
+                        Modifier
+                    </a>
+                    <button onclick="togglePublished(${article.id}, ${article.published})" 
+                            class="px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm flex-1 lg:flex-none ${article.published 
+                                ? 'bg-yellow-600 text-white hover:bg-yellow-700' 
+                                : 'bg-green-600 text-white hover:bg-green-700'
+                            }">
+                        ${article.published ? 'Dépublier' : 'Publier'}
+                    </button>
+                    <button onclick="deleteArticle(${article.id}, '${article.title}')" 
+                            class="bg-red-600 text-white px-3 sm:px-4 py-2 rounded-md hover:bg-red-700 text-xs sm:text-sm flex-1 lg:flex-none">
+                        Supprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Toggle published
+async function togglePublished(articleId, currentPublished) {
+    if (!confirm(`Êtes-vous sûr de vouloir ${currentPublished ? 'dé' : ''}publier cet article ?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/articles/${articleId}/toggle-published`, {
+            method: 'POST'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erreur lors de la modification');
+        }
+        
+        // Recharger les articles
+        await loadArticles();
+    } catch (error) {
+        alert('Erreur: ' + error.message);
+    }
+}
+
+// Supprimer un article
+async function deleteArticle(articleId, title) {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer l'article "${title}" ? Cette action est irréversible.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/articles/${articleId}`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erreur lors de la suppression');
+        }
+        
+        // Recharger les articles
+        await loadArticles();
+    } catch (error) {
+        alert('Erreur: ' + error.message);
+    }
+}
+
+// Filtres
+document.getElementById('filter-all').addEventListener('click', function() {
+    currentFilter = 'all';
+    updateFilterButtons();
+    displayArticles();
+});
+
+document.getElementById('filter-published').addEventListener('click', function() {
+    currentFilter = 'published';
+    updateFilterButtons();
+    displayArticles();
+});
+
+document.getElementById('filter-draft').addEventListener('click', function() {
+    currentFilter = 'draft';
+    updateFilterButtons();
+    displayArticles();
+});
+
+function updateFilterButtons() {
+    document.querySelectorAll('[id^="filter-"]').forEach(btn => {
+        btn.classList.remove('bg-indigo-600', 'text-white');
+        btn.classList.add('bg-gray-200', 'text-gray-700');
+    });
+    
+    const activeBtn = document.getElementById(`filter-${currentFilter}`);
+    activeBtn.classList.remove('bg-gray-200', 'text-gray-700');
+    activeBtn.classList.add('bg-indigo-600', 'text-white');
+}
+
+// Initialiser
+loadArticles();
+</script>
+{% endblock %}
+

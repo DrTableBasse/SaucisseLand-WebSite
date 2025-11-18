@@ -1,9 +1,16 @@
-from pydantic_settings import BaseSettings
-from pydantic import field_validator
+"""Configuration de l'application via variables d'environnement."""
 from typing import List
-import os
+
+from pydantic import field_validator
+from pydantic_settings import BaseSettings
+
 
 class Settings(BaseSettings):
+    """Configuration de l'application.
+
+    Toutes les variables sont chargées depuis le fichier .env.
+    Les validations sont effectuées automatiquement au chargement.
+    """
     # Database
     DATABASE_URL: str
     
@@ -14,7 +21,7 @@ class Settings(BaseSettings):
     # Discord OAuth
     DISCORD_CLIENT_ID: str
     DISCORD_CLIENT_SECRET: str
-    DISCORD_REDIRECT_URI: str = ""  # Sera construit à partir de BASE_URL si vide
+    DISCORD_REDIRECT_URI: str = ""  # Par défaut: http://localhost:8000/api/auth/callback/social/discord
     DISCORD_GUILD_ID: str
     DISCORD_BOT_TOKEN: str
     
@@ -86,32 +93,44 @@ class Settings(BaseSettings):
     MAX_UPLOAD_SIZE: int = 10 * 1024 * 1024  # 10MB
     
     @property
-    def DISCORD_REDIRECT_URI_FINAL(self) -> str:
-        """Retourne l'URL de redirection Discord (construite ou configurée)"""
-        if self.DISCORD_REDIRECT_URI:
-            return self.DISCORD_REDIRECT_URI
-        # Construire à partir de BASE_URL
-        base = self.BASE_URL.rstrip('/')
-        return f"{base}/api/auth/callback/social/discord"
-    
-    @property
     def ALLOWED_ROLE_IDS(self) -> List[str]:
-        """Parse ALLOWED_ROLE_IDS from comma-separated string"""
+        """Parse ALLOWED_ROLE_IDS depuis une chaîne séparée par des virgules.
+
+        Returns:
+            List[str]: Liste des IDs de rôles autorisés
+        """
         if not self.ALLOWED_ROLE_IDS_STR:
             return []
-        return [role_id.strip() for role_id in self.ALLOWED_ROLE_IDS_STR.split(",") if role_id.strip()]
-    
+        return [
+            role_id.strip()
+            for role_id in self.ALLOWED_ROLE_IDS_STR.split(",")
+            if role_id.strip()
+        ]
+
     @property
     def CORS_ORIGINS(self) -> List[str]:
-        """Parse CORS_ORIGINS from comma-separated string"""
+        """Parse CORS_ORIGINS depuis une chaîne séparée par des virgules.
+
+        Si vide, utilise BASE_URL par défaut.
+
+        Returns:
+            List[str]: Liste des origines CORS autorisées
+        """
         if self.CORS_ORIGINS_STR:
-            return [origin.strip() for origin in self.CORS_ORIGINS_STR.split(",") if origin.strip()]
+            return [
+                origin.strip()
+                for origin in self.CORS_ORIGINS_STR.split(",")
+                if origin.strip()
+            ]
         # Par défaut, utiliser BASE_URL
-        return [self.BASE_URL.rstrip('/')]
-    
+        return [self.BASE_URL.rstrip("/")]
+
     class Config:
+        """Configuration Pydantic."""
+
         env_file = ".env"
         case_sensitive = True
+
 
 settings = Settings()
 
