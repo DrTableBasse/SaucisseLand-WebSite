@@ -3,77 +3,63 @@
 {% block title %}Modifier l'article - Discord Blog{% endblock %}
 
 {% block content %}
-<div class="bg-white rounded-lg shadow-md p-4 sm:p-6 lg:p-8">
-    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">Modifier l'article</h1>
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 lg:p-8 transition-colors duration-200">
+    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6">Modifier l'article</h1>
     
     <form id="article-form" class="space-y-6">
         <input type="hidden" id="article-id" value="{{ article.id }}">
         <div>
-            <label for="title" class="block text-sm font-medium text-gray-700 mb-2">Titre</label>
+            <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Titre</label>
             <input type="text" id="title" name="title" required
-                   class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                    value="{{ article.title }}">
         </div>
         
         <div>
-            <label for="slug" class="block text-sm font-medium text-gray-700 mb-2">Slug (URL)</label>
+            <label for="slug" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Slug (URL)</label>
             <input type="text" id="slug" name="slug" required
-                   class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                    value="{{ article.slug }}">
-            <p class="mt-1 text-sm text-gray-500">L'URL de votre article (ex: mon-premier-article)</p>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">L'URL de votre article (ex: mon-premier-article)</p>
         </div>
         
         <div>
-            <label for="excerpt" class="block text-sm font-medium text-gray-700 mb-2">Résumé</label>
+            <label for="excerpt" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Résumé</label>
             <textarea id="excerpt" name="excerpt" rows="3"
-                      class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">{{ article.excerpt or '' }}</textarea>
+                      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">{{ article.excerpt or '' }}</textarea>
         </div>
         
         <div>
-            <label for="tags" class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
-            <div id="tags-container" class="flex flex-wrap gap-2 mb-2">
-                <!-- Les tags sélectionnés apparaîtront ici -->
+            <div class="flex items-center justify-between mb-3">
+                <label for="tags" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tags</label>
+                <a href="/tags" target="_blank" class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300">Gérer les tags →</a>
             </div>
-            <select id="tags-select" multiple
-                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                <!-- Les tags seront chargés via JavaScript -->
-            </select>
-            <p class="mt-1 text-sm text-gray-500">Sélectionnez un ou plusieurs tags (maintenez Ctrl/Cmd pour sélection multiple)</p>
-            <a href="/tags" target="_blank" class="mt-2 inline-block text-sm text-indigo-600 hover:text-indigo-800">Gérer les tags →</a>
+            
+            <!-- Zone de recherche des tags -->
+            <div class="mb-3">
+                <input type="text" id="tag-search" placeholder="Rechercher un tag..." 
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+            </div>
+            
+            <!-- Tags disponibles -->
+            <div id="tags-available" class="flex flex-wrap gap-2 mb-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-md border border-gray-200 dark:border-gray-700 min-h-[60px]">
+                <p class="text-sm text-gray-500 dark:text-gray-400 w-full">Chargement des tags...</p>
+            </div>
+            
+            <!-- Tags sélectionnés -->
+            <div class="mb-2">
+                <p class="text-xs text-gray-600 dark:text-gray-400 mb-2">Tags sélectionnés :</p>
+                <div id="tags-container" class="flex flex-wrap gap-2 min-h-[40px] p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
+                    <p class="text-sm text-gray-400 dark:text-gray-500 italic">Aucun tag sélectionné</p>
+                </div>
+            </div>
         </div>
         
         <div>
-            <div class="flex items-center justify-between mb-2">
-                <label for="content" class="block text-sm font-medium text-gray-700">Contenu (Markdown)</label>
-                <div class="flex space-x-2">
-                    <button type="button" id="toggle-preview" class="text-xs sm:text-sm text-indigo-600 hover:text-indigo-800 whitespace-nowrap">
-                        <span class="hidden sm:inline">Afficher/Masquer la prévisualisation</span>
-                        <span class="sm:hidden">Prévisualisation</span>
-                    </button>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="editor-container">
-                <div class="relative">
-                    <div class="flex border border-gray-300 rounded-md overflow-hidden">
-                        <!-- Numéros de lignes -->
-                        <div id="line-numbers" class="bg-gray-100 text-gray-500 text-xs py-2 px-3 font-mono text-right select-none border-r border-gray-300 overflow-hidden" style="min-width: 50px; line-height: 1.6;">
-                        </div>
-                        <!-- Textarea -->
-                        <textarea id="content" name="content" rows="20" required
-                                  class="flex-1 px-4 py-2 border-0 focus:ring-0 focus:outline-none font-mono text-sm resize-none"
-                                  placeholder="Écrivez votre article en Markdown ici..."
-                                  style="line-height: 1.6; height: 500px;">{{ article.content }}</textarea>
-                    </div>
-                    <p class="mt-1 text-sm text-gray-500">Utilisez la syntaxe Markdown pour formater votre article</p>
-                </div>
-                <div id="preview-container" class="hidden md:block preview-visible">
-                    <div class="border border-gray-300 rounded-md bg-gray-50 overflow-hidden flex flex-col" style="height: 500px;">
-                        <div class="text-sm text-gray-500 px-4 py-2 border-b bg-white font-medium">Prévisualisation</div>
-                        <div id="preview" class="prose prose-sm max-w-none p-4 overflow-y-auto flex-1">
-                            <p class="text-gray-400 italic">La prévisualisation apparaîtra ici...</p>
-                        </div>
-                    </div>
-                </div>
+            <label for="content" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contenu (Markdown)</label>
+            <div id="editor-container">
+                <textarea id="content" name="content" required>{{ article.content }}</textarea>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Utilisez la barre d'outils ou la syntaxe Markdown pour formater votre article</p>
             </div>
         </div>
         
@@ -81,24 +67,59 @@
             <input type="checkbox" id="published" name="published"
                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                    {% if article.published %}checked{% endif %}>
-            <label for="published" class="ml-2 block text-sm text-gray-700">Publier immédiatement</label>
+            <label for="published" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Publier immédiatement</label>
+        </div>
+        <div id="publish-warning" class="{% if not article.published %}hidden{% endif %} mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+            <p class="text-sm text-yellow-800 dark:text-yellow-300">
+                ⚠️ <strong>Attention :</strong> L'article sera immédiatement visible par tous les visiteurs du site.
+            </p>
+        </div>
+        
+        <!-- Modal de confirmation de publication -->
+        <div id="publish-confirm-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+                <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0 w-10 h-10 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
+                        <span class="text-yellow-600 dark:text-yellow-400 text-xl">⚠️</span>
+                    </div>
+                    <h3 class="ml-3 text-lg font-medium text-gray-900 dark:text-white">Confirmation de publication</h3>
+                </div>
+                <div class="mb-6">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        Vous êtes sur le point de publier cet article immédiatement.
+                    </p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        Il sera <strong>visible par tous les visiteurs</strong> du site.
+                    </p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3 sm:justify-end">
+                    <button type="button" id="publish-cancel-btn" 
+                            class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600">
+                        Annuler
+                    </button>
+                    <button type="button" id="publish-confirm-btn" 
+                            class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 dark:bg-indigo-500 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600">
+                        Confirmer la publication
+                    </button>
+                </div>
+            </div>
         </div>
         
         <div class="flex flex-col sm:flex-row gap-3 sm:space-x-4">
-            <button type="submit" class="bg-indigo-600 text-white px-4 sm:px-6 py-2 rounded-md hover:bg-indigo-700 text-sm sm:text-base">
+            <button type="submit" class="bg-indigo-600 dark:bg-indigo-500 text-white px-4 sm:px-6 py-2 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 text-sm sm:text-base">
                 Enregistrer les modifications
             </button>
-            <a href="/manage" class="bg-gray-300 text-gray-700 px-4 sm:px-6 py-2 rounded-md hover:bg-gray-400 text-center text-sm sm:text-base">
+            <a href="/manage" class="bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 sm:px-6 py-2 rounded-md hover:bg-gray-400 dark:hover:bg-gray-600 text-center text-sm sm:text-base">
                 Annuler
             </a>
         </div>
     </form>
     
     <div id="upload-section" class="mt-8 border-t pt-6">
-        <h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-4">Upload d'images</h2>
+        <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4">Upload d'images</h2>
         <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
             <input type="file" id="image-upload" accept="image/*" class="mb-2 sm:mb-0 text-sm sm:text-base">
-            <button onclick="uploadImage()" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-sm sm:text-base whitespace-nowrap">
+            <button onclick="uploadImage()" class="bg-green-600 dark:bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-700 dark:hover:bg-green-600 text-sm sm:text-base whitespace-nowrap">
                 Uploader l'image
             </button>
         </div>
@@ -109,114 +130,71 @@
 
 <script>
 // Prévisualisation Markdown en temps réel
-const contentTextarea = document.getElementById('content');
-const previewDiv = document.getElementById('preview');
-const previewContainer = document.getElementById('preview-container');
-const togglePreviewBtn = document.getElementById('toggle-preview');
-
-// Configurer marked pour les options de sécurité et Prism
-marked.setOptions({
-    breaks: true,
-    gfm: true,
-    sanitize: false,
-    smartLists: true,
-    smartypants: true,
-    highlight: function(code, lang) {
-        return code;
-    }
-});
-
-// Fonction pour mettre à jour la prévisualisation
-function updatePreview() {
-    const markdown = contentTextarea.value;
-    if (markdown.trim() === '') {
-        previewDiv.innerHTML = '<p class="text-gray-400 italic">La prévisualisation apparaîtra ici...</p>';
-    } else {
-        const html = marked.parse(markdown);
-        previewDiv.innerHTML = html;
-        
-        if (typeof Prism !== 'undefined') {
-            const codeBlocks = previewDiv.querySelectorAll('pre code');
-            codeBlocks.forEach(function(block) {
-                if (!block.classList.contains('language-none')) {
-                    const parent = block.parentElement;
-                    if (parent && parent.tagName === 'PRE' && parent.className) {
-                        const langMatch = parent.className.match(/language-(\w+)/);
-                        if (langMatch) {
-                            block.className = 'language-' + langMatch[1];
-                        }
-                    }
-                    
-                    if (block.className && block.className.includes('language-')) {
-                        setTimeout(function() {
-                            Prism.highlightElement(block);
-                        }, 100);
-                    }
-                }
+// Initialiser EasyMDE - Éditeur Markdown avec barre d'outils
+let easyMDE;
+if (typeof EasyMDE !== 'undefined') {
+    easyMDE = new EasyMDE({
+        element: document.getElementById('content'),
+        spellChecker: false,
+        autosave: {
+            enabled: false
+        },
+        placeholder: 'Écrivez votre article en Markdown ici...',
+        status: ['lines', 'words', 'cursor'],
+        toolbar: [
+            'bold', 'italic', 'strikethrough', '|',
+            'heading-1', 'heading-2', 'heading-3', '|',
+            'quote', 'unordered-list', 'ordered-list', '|',
+            'link', 'image', 'table', '|',
+            'code', 'horizontal-rule', '|',
+            'preview', 'side-by-side', 'fullscreen', '|',
+            'guide'
+        ],
+        renderingConfig: {
+            singleLineBreaks: false,
+            codeSyntaxHighlighting: true
+        },
+        previewClass: ['prose', 'prose-sm', 'dark:prose-invert', 'max-w-none'],
+        previewRender: function(plainText) {
+            // Utiliser marked pour le rendu
+            const html = marked.parse(plainText);
+            // Sanitizer avec DOMPurify
+            return DOMPurify.sanitize(html, {
+                ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+                               'ul', 'ol', 'li', 'blockquote', 'code', 'pre', 'a', 'img', 'hr',
+                               'table', 'thead', 'tbody', 'tr', 'th', 'td', 'del', 'ins', 'sub', 'sup'],
+                ALLOWED_ATTR: ['href', 'title', 'target', 'rel', 'src', 'alt', 'class', 'align', 'colspan', 'rowspan'],
+                ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
             });
+        },
+        // Personnaliser les styles pour le dark mode
+        toolbarButtonClassPrefix: 'easymde-button',
+        initialValue: document.getElementById('content').value || ''
+    });
+    
+    // Adapter EasyMDE au dark mode
+    const updateEasyMDEDarkMode = () => {
+        const isDark = document.documentElement.classList.contains('dark');
+        const editor = document.querySelector('.EasyMDEContainer');
+        if (editor) {
+            if (isDark) {
+                editor.classList.add('dark-mode');
+            } else {
+                editor.classList.remove('dark-mode');
+            }
         }
-    }
+    };
+    
+    // Observer les changements de dark mode
+    const observer = new MutationObserver(updateEasyMDEDarkMode);
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class']
+    });
+    updateEasyMDEDarkMode();
+} else {
+    console.error('EasyMDE n\'est pas chargé. Vérifiez que le script est inclus dans base.html');
 }
-
-// Fonction pour mettre à jour les numéros de lignes
-function updateLineNumbers() {
-    const textarea = contentTextarea;
-    const lineNumbers = document.getElementById('line-numbers');
-    const lines = textarea.value.split('\n').length;
-    const lineNumbersHTML = Array.from({ length: Math.max(lines, 20) }, (_, i) => 
-        `<div style="height: 1.6em;">${i + 1}</div>`
-    ).join('');
-    lineNumbers.innerHTML = lineNumbersHTML;
-}
-
-// Synchroniser le scroll du textarea avec les numéros de lignes
-contentTextarea.addEventListener('scroll', function() {
-    document.getElementById('line-numbers').scrollTop = this.scrollTop;
-});
-
-// Mettre à jour la prévisualisation et les numéros de lignes en temps réel
-contentTextarea.addEventListener('input', function() {
-    updatePreview();
-    updateLineNumbers();
-});
-contentTextarea.addEventListener('paste', function() {
-    setTimeout(function() {
-        updatePreview();
-        updateLineNumbers();
-    }, 10);
-});
-
-// Initialiser les numéros de lignes et la prévisualisation
-updateLineNumbers();
-updatePreview();
-
-// Toggle prévisualisation
-togglePreviewBtn.addEventListener('click', function() {
-    const isVisible = previewContainer.classList.contains('preview-visible');
-    const isMobile = window.innerWidth < 640;
-    if (isVisible) {
-        previewContainer.classList.remove('preview-visible');
-        previewContainer.classList.add('hidden');
-        if (isMobile) {
-            togglePreviewBtn.innerHTML = '<span class="sm:hidden">Prévisualisation</span><span class="hidden sm:inline">Afficher la prévisualisation</span>';
-        } else {
-            togglePreviewBtn.textContent = 'Afficher la prévisualisation';
-        }
-        document.getElementById('editor-container').classList.remove('md:grid-cols-2');
-        document.getElementById('editor-container').classList.add('md:grid-cols-1');
-    } else {
-        previewContainer.classList.remove('hidden');
-        previewContainer.classList.add('preview-visible');
-        if (isMobile) {
-            togglePreviewBtn.innerHTML = '<span class="sm:hidden">Masquer</span><span class="hidden sm:inline">Masquer la prévisualisation</span>';
-        } else {
-            togglePreviewBtn.textContent = 'Masquer la prévisualisation';
-        }
-        document.getElementById('editor-container').classList.remove('md:grid-cols-1');
-        document.getElementById('editor-container').classList.add('md:grid-cols-2');
-        updatePreview();
-    }
-});
 
 // Upload d'image
 async function uploadImage() {
@@ -244,16 +222,22 @@ async function uploadImage() {
         const imageUrl = `/uploads/${image.filename}`;
         const markdown = `![${image.original_filename}](${imageUrl})`;
         
-        const content = document.getElementById('content');
-        const start = content.selectionStart;
-        const end = content.selectionEnd;
-        const text = content.value;
-        content.value = text.substring(0, start) + markdown + text.substring(end);
-        content.focus();
-        content.setSelectionRange(start + markdown.length, start + markdown.length);
-        
-        updatePreview();
-        updateLineNumbers();
+        // Insérer dans EasyMDE
+        if (easyMDE) {
+            const cursor = easyMDE.codemirror.getCursor();
+            const doc = easyMDE.codemirror.getDoc();
+            doc.replaceRange(markdown, cursor);
+            easyMDE.codemirror.focus();
+        } else {
+            // Fallback si EasyMDE n'est pas chargé
+            const content = document.getElementById('content');
+            const start = content.selectionStart;
+            const end = content.selectionEnd;
+            const text = content.value;
+            content.value = text.substring(0, start) + markdown + text.substring(end);
+            content.focus();
+            content.setSelectionRange(start + markdown.length, start + markdown.length);
+        }
         
         document.getElementById('upload-result').innerHTML = 
             `<p class="text-green-600">Image uploadée avec succès !</p>`;
@@ -264,19 +248,30 @@ async function uploadImage() {
     }
 }
 
-// Soumettre le formulaire (PUT pour modification)
-document.getElementById('article-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
+// Afficher/masquer l'avertissement de publication
+document.getElementById('published').addEventListener('change', function() {
+    const warning = document.getElementById('publish-warning');
+    if (this.checked) {
+        warning.classList.remove('hidden');
+    } else {
+        warning.classList.add('hidden');
+    }
+});
+
+// Fonction pour soumettre le formulaire
+async function submitArticleForm() {
     const articleId = document.getElementById('article-id').value;
+    
     // Récupérer les tags sélectionnés
-    const selectedTags = Array.from(document.getElementById('tags-select').selectedOptions)
-        .map(option => parseInt(option.value));
+    const selectedTags = Array.from(selectedTagIds);
+    
+    // Récupérer le contenu depuis EasyMDE ou le textarea
+    const content = easyMDE ? easyMDE.value() : document.getElementById('content').value;
     
     const formData = {
         title: document.getElementById('title').value,
         slug: document.getElementById('slug').value,
-        content: document.getElementById('content').value,
+        content: content,
         excerpt: document.getElementById('excerpt').value,
         published: document.getElementById('published').checked,
         tag_ids: selectedTags
@@ -301,74 +296,160 @@ document.getElementById('article-form').addEventListener('submit', async functio
     } catch (error) {
         alert('Erreur: ' + error.message);
     }
+}
+
+// Soumettre le formulaire (PUT pour modification)
+document.getElementById('article-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const published = document.getElementById('published').checked;
+    const wasPublished = {% if article.published %}true{% else %}false{% endif %};
+    
+    // Afficher la modal de confirmation si l'article doit être publié (nouveau ou changement d'état)
+    if (published && !wasPublished) {
+        document.getElementById('publish-confirm-modal').classList.remove('hidden');
+    } else {
+        // Pas de confirmation nécessaire, soumettre directement
+        await submitArticleForm();
+    }
 });
 
-// Charger les tags
+// Gestion de la modal de confirmation
+document.getElementById('publish-cancel-btn').addEventListener('click', function() {
+    document.getElementById('publish-confirm-modal').classList.add('hidden');
+});
+
+document.getElementById('publish-confirm-btn').addEventListener('click', async function() {
+    document.getElementById('publish-confirm-modal').classList.add('hidden');
+    await submitArticleForm();
+});
+
+// Fermer la modal en cliquant en dehors
+document.getElementById('publish-confirm-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        this.classList.add('hidden');
+    }
+});
+
+// Variables globales pour les tags
+let allTags = [];
+let selectedTagIds = new Set();
+
+// Charger les tags disponibles
 async function loadTags() {
     try {
         const response = await fetch('/api/tags/');
         if (!response.ok) throw new Error('Erreur lors du chargement des tags');
-        const tags = await response.json();
+        allTags = await response.json();
         
-        const select = document.getElementById('tags-select');
-        const articleTags = {{ article.tags | tojson | safe }};
-        const articleTagIds = articleTags.map(tag => tag.id);
-        
-        tags.forEach(tag => {
-            const option = document.createElement('option');
-            option.value = tag.id;
-            option.textContent = tag.name;
-            option.style.color = tag.color || '#3b82f6';
-            if (articleTagIds.includes(tag.id)) {
-                option.selected = true;
-            }
-            select.appendChild(option);
+        // Initialiser les tags sélectionnés depuis l'article
+        const articleTags = {{ article_tags_json | tojson | safe }};
+        articleTags.forEach(tag => {
+            selectedTagIds.add(tag.id);
         });
         
+        renderAvailableTags();
         updateSelectedTags();
     } catch (error) {
         console.error('Erreur lors du chargement des tags:', error);
+        document.getElementById('tags-available').innerHTML = 
+            '<p class="text-sm text-red-500">Erreur lors du chargement des tags</p>';
     }
+}
+
+// Afficher les tags disponibles (avec filtre de recherche)
+function renderAvailableTags() {
+    const container = document.getElementById('tags-available');
+    const searchTerm = document.getElementById('tag-search').value.toLowerCase();
+    
+    // Filtrer les tags selon la recherche
+    const filteredTags = allTags.filter(tag => 
+        tag.name.toLowerCase().includes(searchTerm) ||
+        (tag.description && tag.description.toLowerCase().includes(searchTerm))
+    );
+    
+    if (filteredTags.length === 0) {
+        container.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400 w-full">Aucun tag trouvé</p>';
+        return;
+    }
+    
+    const html = filteredTags.map(tag => {
+        const isSelected = selectedTagIds.has(tag.id);
+        const selectedClass = isSelected ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105';
+        const tagName = escapeHTML(tag.name || '');
+        const tagColor = escapeHTML(tag.color || '#3b82f6');
+        const tagDescription = tag.description ? escapeHTML(tag.description) : '';
+        
+        return `
+            <div class="tag-item ${selectedClass}" data-tag-id="${tag.id}" onclick="${isSelected ? '' : `toggleTag(${tag.id})`}">
+                <div class="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all"
+                     style="background-color: ${tagColor}15; 
+                            border-color: ${tagColor}; 
+                            color: ${tagColor};">
+                    <span>${tagName}</span>
+                    ${isSelected ? '<span class="ml-2 text-xs">✓</span>' : ''}
+                </div>
+                ${tagDescription ? `<div class="mt-1 text-xs text-gray-500 dark:text-gray-400 max-w-[200px]">${tagDescription}</div>` : ''}
+            </div>
+        `;
+    }).join('');
+    setSafeHTML(container, html);
+}
+
+// Basculer la sélection d'un tag
+function toggleTag(tagId) {
+    if (selectedTagIds.has(tagId)) {
+        selectedTagIds.delete(tagId);
+    } else {
+        selectedTagIds.add(tagId);
+    }
+    renderAvailableTags();
+    updateSelectedTags();
 }
 
 // Afficher les tags sélectionnés
 function updateSelectedTags() {
     const container = document.getElementById('tags-container');
-    const select = document.getElementById('tags-select');
-    const selected = Array.from(select.selectedOptions);
     
-    // Charger tous les tags pour obtenir leurs couleurs
-    fetch('/api/tags/')
-        .then(response => response.json())
-        .then(tags => {
-            const tagsMap = {};
-            tags.forEach(tag => {
-                tagsMap[tag.id] = tag;
-            });
-            
-            container.innerHTML = selected.map(option => {
-                const tagId = parseInt(option.value);
-                const tag = tagsMap[tagId];
-                if (!tag) return '';
-                return `<span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium" style="background-color: ${tag.color || '#3b82f6'}20; color: ${tag.color || '#3b82f6'};">
-                    ${tag.name}
-                    <button type="button" onclick="removeTag(${tag.id})" class="ml-2 text-gray-500 hover:text-gray-700">×</button>
-                </span>`;
-            }).join('');
-        })
-        .catch(error => console.error('Erreur lors du chargement des tags:', error));
-}
-
-function removeTag(tagId) {
-    const select = document.getElementById('tags-select');
-    const option = Array.from(select.options).find(opt => parseInt(opt.value) === tagId);
-    if (option) {
-        option.selected = false;
-        updateSelectedTags();
+    if (selectedTagIds.size === 0) {
+        container.innerHTML = '<p class="text-sm text-gray-400 dark:text-gray-500 italic">Aucun tag sélectionné</p>';
+        return;
     }
+    
+    const selectedTags = allTags.filter(tag => selectedTagIds.has(tag.id));
+    
+    const html = selectedTags.map(tag => {
+        const tagName = escapeHTML(tag.name || '');
+        const tagColor = escapeHTML(tag.color || '#3b82f6');
+        const tagDescription = tag.description ? escapeHTML(tag.description) : '';
+        
+        return `
+            <div class="inline-flex items-start gap-2 bg-white dark:bg-gray-800 rounded-lg p-2 border border-gray-300 dark:border-gray-700 shadow-sm">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full" style="background-color: ${tagColor};"></div>
+                    <span class="text-sm font-medium" style="color: ${tagColor};">
+                        ${tagName}
+                    </span>
+                    <button type="button" onclick="toggleTag(${tag.id})" 
+                            class="ml-1 text-gray-400 hover:text-red-500 transition-colors">
+                        ×
+                    </button>
+                </div>
+                ${tagDescription ? `
+                    <div class="text-xs text-gray-600 italic max-w-[300px]">
+                        ${tagDescription}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }).join('');
+    setSafeHTML(container, html);
 }
 
-document.getElementById('tags-select').addEventListener('change', updateSelectedTags);
+// Recherche de tags
+document.getElementById('tag-search').addEventListener('input', function() {
+    renderAvailableTags();
+});
 
 // Charger les tags au chargement de la page
 loadTags();

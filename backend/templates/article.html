@@ -20,11 +20,11 @@
     </div>
 </div>
 
-<article class="bg-white rounded-lg shadow-md p-4 sm:p-6 lg:p-8">
-    <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">{{ article.title }}</h1>
+<article class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 lg:p-8 transition-colors duration-200">
+    <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">{{ article.title }}</h1>
     
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div class="flex flex-wrap items-center text-xs sm:text-sm text-gray-500 gap-2">
+        <div class="flex flex-wrap items-center text-xs sm:text-sm text-gray-500 dark:text-gray-400 gap-2">
             <span>Par {{ article.author.username }}</span>
             <span class="hidden sm:inline">•</span>
             <span>{{ article.created_at.strftime('%d/%m/%Y') if article.created_at else '' }}</span>
@@ -34,7 +34,7 @@
             <span id="likes-count">❤️ {{ article.likes }} likes</span>
         </div>
         <button id="like-btn" onclick="toggleLike({{ article.id }})" 
-                class="px-4 py-2 rounded transition-colors w-full sm:w-auto">
+                class="px-4 py-2 rounded transition-colors bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 w-full sm:w-auto">
             <span id="like-text">❤️ J'aime</span>
         </button>
     </div>
@@ -50,7 +50,7 @@
     </div>
     {% endif %}
     
-    <div id="article-content" class="prose max-w-none">
+    <div id="article-content" class="prose dark:prose-invert max-w-none">
         <!-- Le contenu Markdown sera rendu ici -->
     </div>
 </article>
@@ -73,10 +73,18 @@ marked.setOptions({
     }
 });
 
-// Rendre le Markdown
+// Rendre le Markdown et sanitizer avec DOMPurify
 const content = {{ article.content|tojson }};
 const html = marked.parse(content);
-document.getElementById('article-content').innerHTML = html;
+// Sanitizer le HTML pour éviter les attaques XSS
+const cleanHtml = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+                   'ul', 'ol', 'li', 'blockquote', 'code', 'pre', 'a', 'img', 'hr',
+                   'table', 'thead', 'tbody', 'tr', 'th', 'td', 'del', 'ins', 'sub', 'sup'],
+    ALLOWED_ATTR: ['href', 'title', 'target', 'rel', 'src', 'alt', 'class', 'align', 'colspan', 'rowspan'],
+    ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
+});
+document.getElementById('article-content').innerHTML = cleanHtml;
 
 // Activer Prism pour le code (pour les cas où marked n'a pas géré la coloration)
 Prism.highlightAll();
@@ -106,12 +114,13 @@ fetch(`/api/articles/${articleId}/like-status`)
 function updateLikeButton(liked) {
     const btn = document.getElementById('like-btn');
     const text = document.getElementById('like-text');
+    const isDark = document.documentElement.classList.contains('dark');
     
     if (liked) {
-        btn.className = 'px-4 py-2 rounded transition-colors bg-red-500 text-white hover:bg-red-600';
+        btn.className = 'px-4 py-2 rounded transition-colors bg-red-500 dark:bg-red-600 text-white hover:bg-red-600 dark:hover:bg-red-700 w-full sm:w-auto';
         text.textContent = '❤️ J\'aime déjà';
     } else {
-        btn.className = 'px-4 py-2 rounded transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300';
+        btn.className = 'px-4 py-2 rounded transition-colors bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 w-full sm:w-auto';
         text.textContent = '❤️ J\'aime';
     }
 }

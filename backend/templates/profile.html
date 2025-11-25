@@ -3,13 +3,13 @@
 {% block title %}Mon profil - Discord Blog{% endblock %}
 
 {% block content %}
-<div class="bg-white rounded-lg shadow-md p-4 sm:p-6 lg:p-8">
-    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">Mon profil</h1>
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 lg:p-8 transition-colors duration-200">
+    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6">Mon profil</h1>
     
     {% if user %}
         <div class="space-y-6">
             <!-- Informations principales -->
-            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 pb-6 border-b border-gray-200">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 pb-6 border-b border-gray-200 dark:border-gray-700">
                 {% if user.avatar %}
                     <img src="https://cdn.discordapp.com/avatars/{{ user.discord_id }}/{{ user.avatar }}.png?size=128" 
                          alt="Avatar de {{ user.username }}" 
@@ -20,11 +20,11 @@
                     </div>
                 {% endif %}
                 <div class="flex-1">
-                    <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{{ user.username }}</h2>
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-1">{{ user.username }}</h2>
                     {% if user.email %}
-                        <p class="text-sm text-gray-600 mb-2">{{ user.email }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">{{ user.email }}</p>
                     {% endif %}
-                    <p class="text-xs sm:text-sm text-gray-500">
+                    <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                         Membre depuis le {{ user.created_at.strftime('%d/%m/%Y') if user.created_at else 'N/A' }}
                     </p>
                 </div>
@@ -32,11 +32,11 @@
             
             <!-- Statistiques -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div class="bg-indigo-50 rounded-lg p-4">
+                <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-4">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-600 mb-1">Articles créés</p>
-                            <p class="text-2xl font-bold text-indigo-600">{{ articles_count }}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Articles créés</p>
+                            <p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{{ articles_count }}</p>
                         </div>
                         <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -44,11 +44,11 @@
                     </div>
                 </div>
                 
-                <div class="bg-red-50 rounded-lg p-4">
+                <div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-600 mb-1">Articles aimés</p>
-                            <p class="text-2xl font-bold text-red-600">{{ liked_count }}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Articles aimés</p>
+                            <p class="text-2xl font-bold text-red-600 dark:text-red-400">{{ liked_count }}</p>
                         </div>
                         <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
@@ -56,11 +56,11 @@
                     </div>
                 </div>
                 
-                <div class="bg-green-50 rounded-lg p-4">
+                <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-600 mb-1">Permissions</p>
-                            <p class="text-lg font-bold {% if can_create_articles %}text-green-600{% else %}text-gray-600{% endif %}">
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Permissions</p>
+                            <p class="text-lg font-bold {% if can_create_articles %}text-green-600 dark:text-green-400{% else %}text-gray-600 dark:text-gray-400{% endif %}">
                                 {% if can_create_articles %}✅ Autorisé{% else %}❌ Non autorisé{% endif %}
                             </p>
                         </div>
@@ -74,42 +74,42 @@
             <!-- Informations détaillées -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <h3 class="text-lg font-bold text-gray-800 mb-3">Informations du compte</h3>
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-3">Informations du compte</h3>
                     <div class="space-y-3">
                         <div>
-                            <p class="text-xs text-gray-500 mb-0">ID Discord</p>
-                            <p class="text-sm font-mono bg-gray-100 py-2 rounded break-all text-gray-900 mt-0 text-left pl-0">{{ user.discord_id }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-0">ID Discord</p>
+                            <p class="text-sm font-mono bg-gray-100 dark:bg-gray-700 py-2 rounded break-all text-gray-900 dark:text-white mt-0 text-left pl-0">{{ user.discord_id }}</p>
                         </div>
                         {% if user.discriminator and user.discriminator != '0' %}
                         <div>
-                            <p class="text-xs text-gray-500 mb-0">Discriminateur</p>
-                            <p class="text-sm bg-gray-100 py-2 rounded text-gray-900 mt-0 text-left pl-0">{{ user.discriminator }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-0">Discriminateur</p>
+                            <p class="text-sm bg-gray-100 dark:bg-gray-700 py-2 rounded text-gray-900 dark:text-white mt-0 text-left pl-0">{{ user.discriminator }}</p>
                         </div>
                         {% endif %}
                         <div>
-                            <p class="text-xs text-gray-500 mb-0">Date de création</p>
-                            <p class="text-sm bg-gray-100 py-2 rounded text-gray-900 mt-0 text-left pl-0">{{ user.created_at.strftime('%d/%m/%Y à %H:%M') if user.created_at else 'N/A' }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-0">Date de création</p>
+                            <p class="text-sm bg-gray-100 dark:bg-gray-700 py-2 rounded text-gray-900 dark:text-white mt-0 text-left pl-0">{{ user.created_at.strftime('%d/%m/%Y à %H:%M') if user.created_at else 'N/A' }}</p>
                         </div>
                         {% if user.updated_at %}
                         <div>
-                            <p class="text-xs text-gray-500 mb-0">Dernière mise à jour</p>
-                            <p class="text-sm bg-gray-100 py-2 rounded text-gray-900 mt-0 text-left pl-0">{{ user.updated_at.strftime('%d/%m/%Y à %H:%M') }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-0">Dernière mise à jour</p>
+                            <p class="text-sm bg-gray-100 dark:bg-gray-700 py-2 rounded text-gray-900 dark:text-white mt-0 text-left pl-0">{{ user.updated_at.strftime('%d/%m/%Y à %H:%M') }}</p>
                         </div>
                         {% endif %}
                     </div>
                 </div>
                 
                 <div>
-                    <h3 class="text-lg font-bold text-gray-800 mb-3">Actions rapides</h3>
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-3">Actions rapides</h3>
                     <div class="space-y-2">
-                        <a href="/liked" class="block w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-center text-sm">
+                        <a href="/liked" class="block w-full px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 text-center text-sm">
                             Voir mes articles aimés
                         </a>
                         {% if can_create_articles %}
-                        <a href="/create" class="block w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-center text-sm">
+                        <a href="/create" class="block w-full px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-600 text-center text-sm">
                             Créer un article
                         </a>
-                        <a href="/manage" class="block w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-center text-sm">
+                        <a href="/manage" class="block w-full px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 text-center text-sm">
                             Gérer mes articles
                         </a>
                         {% endif %}
@@ -119,8 +119,8 @@
         </div>
     {% else %}
         <div class="text-center py-12">
-            <p class="text-gray-600 mb-4">Vous devez être connecté pour voir votre profil.</p>
-            <a href="/api/auth/login" class="inline-block bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700">
+            <p class="text-gray-600 dark:text-gray-400 mb-4">Vous devez être connecté pour voir votre profil.</p>
+            <a href="/api/auth/login" class="inline-block bg-indigo-600 dark:bg-indigo-500 text-white px-6 py-2 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600">
                 Se connecter avec Discord
             </a>
         </div>

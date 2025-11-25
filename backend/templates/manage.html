@@ -3,35 +3,54 @@
 {% block title %}Gestion des articles - Discord Blog{% endblock %}
 
 {% block content %}
-<div class="bg-white rounded-lg shadow-md p-4 sm:p-6 lg:p-8">
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 lg:p-8 transition-colors duration-200">
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Gestion des articles</h1>
-        <a href="/create" class="bg-indigo-600 text-white px-4 sm:px-6 py-2 rounded-md hover:bg-indigo-700 text-center text-sm sm:text-base">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Gestion des articles</h1>
+        <a href="/create" class="bg-indigo-600 dark:bg-indigo-500 text-white px-4 sm:px-6 py-2 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 text-center text-sm sm:text-base">
             Créer un article
         </a>
     </div>
     
+    <!-- Barre de recherche -->
+    <div class="mb-4">
+        <div class="relative">
+            <input type="text" id="search-input" placeholder="Rechercher par nom d'article ou tag..." 
+                   class="w-full px-4 py-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+            <button id="clear-search" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center">
+                <svg class="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+    
     <div class="mb-4 flex flex-wrap gap-2">
-        <button id="filter-all" class="px-3 sm:px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 text-sm">
+        <button id="filter-all" class="px-3 sm:px-4 py-2 rounded-md bg-indigo-600 dark:bg-indigo-500 text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 text-sm">
             Tous
         </button>
-        <button id="filter-published" class="px-3 sm:px-4 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 text-sm">
+        <button id="filter-published" class="px-3 sm:px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 text-sm">
             Publiés
         </button>
-        <button id="filter-draft" class="px-3 sm:px-4 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 text-sm">
+        <button id="filter-draft" class="px-3 sm:px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 text-sm">
             Brouillons
         </button>
     </div>
     
     <div id="articles-list" class="space-y-4">
         <!-- Les articles seront chargés ici -->
-        <p class="text-gray-500">Chargement...</p>
+        <p class="text-gray-500 dark:text-gray-400">Chargement...</p>
     </div>
 </div>
 
 <script>
 let allArticles = [];
 let currentFilter = 'all';
+let searchTerm = '';
 
 // Charger tous les articles
 async function loadArticles() {
@@ -40,7 +59,7 @@ async function loadArticles() {
         if (!response.ok) {
             if (response.status === 403) {
                 document.getElementById('articles-list').innerHTML = 
-                    '<p class="text-red-600">Vous n\'avez pas les permissions pour gérer les articles.</p>';
+                    '<p class="text-red-600 dark:text-red-400">Vous n\'avez pas les permissions pour gérer les articles.</p>';
                 return;
             }
             throw new Error('Erreur lors du chargement');
@@ -51,44 +70,84 @@ async function loadArticles() {
     } catch (error) {
         console.error('Erreur:', error);
         document.getElementById('articles-list').innerHTML = 
-            '<p class="text-red-600">Erreur lors du chargement des articles.</p>';
+            '<p class="text-red-600 dark:text-red-400">Erreur lors du chargement des articles.</p>';
     }
 }
 
-// Afficher les articles selon le filtre
+// Afficher les articles selon le filtre et la recherche
 function displayArticles() {
     const container = document.getElementById('articles-list');
     
     let filtered = allArticles;
+    
+    // Appliquer le filtre de statut (publié/brouillon)
     if (currentFilter === 'published') {
         filtered = allArticles.filter(a => a.published);
     } else if (currentFilter === 'draft') {
         filtered = allArticles.filter(a => !a.published);
     }
     
+    // Appliquer la recherche par nom ou tag
+    if (searchTerm.trim() !== '') {
+        const searchLower = searchTerm.toLowerCase().trim();
+        filtered = filtered.filter(article => {
+            // Recherche par titre
+            const titleMatch = article.title.toLowerCase().includes(searchLower);
+            
+            // Recherche par tag
+            const tagMatch = article.tags && article.tags.some(tag => 
+                tag.name.toLowerCase().includes(searchLower)
+            );
+            
+            return titleMatch || tagMatch;
+        });
+    }
+    
     if (filtered.length === 0) {
-        container.innerHTML = '<p class="text-gray-500">Aucun article trouvé.</p>';
+        container.innerHTML = '<p class="text-gray-500 dark:text-gray-400">Aucun article trouvé.</p>';
         return;
     }
     
-    container.innerHTML = filtered.map(article => `
-        <div class="border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-md transition-shadow">
+    const html = filtered.map(article => {
+        const title = escapeHTML(article.title || '');
+        const slug = escapeHTML(article.slug || '');
+        const excerpt = article.excerpt ? escapeHTML(article.excerpt) : '';
+        const author = escapeHTML(article.author?.username || '');
+        const date = article.created_at ? new Date(article.created_at).toLocaleDateString('fr-FR') : '';
+        
+        // Afficher les tags de l'article
+        const tagsHtml = article.tags && article.tags.length > 0 
+            ? `<div class="flex flex-wrap gap-2 mt-2">
+                ${article.tags.map(tag => {
+                    const tagName = escapeHTML(tag.name || '');
+                    const tagColor = escapeHTML(tag.color || '#3b82f6');
+                    return `<span class="px-2 py-1 text-xs rounded-full" 
+                          style="background-color: ${tagColor}20; color: ${tagColor};">
+                        ${tagName}
+                    </span>`;
+                }).join('')}
+               </div>`
+            : '';
+        
+        return `
+        <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 hover:shadow-md transition-shadow bg-white dark:bg-gray-800">
             <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
                 <div class="flex-1">
                     <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
-                        <h2 class="text-lg sm:text-xl font-bold text-gray-900">
-                            <a href="/article/${article.slug}" class="hover:text-indigo-600">${article.title}</a>
+                        <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                            <a href="/article/${slug}" class="hover:text-indigo-600 dark:hover:text-indigo-400">${title}</a>
                         </h2>
                         ${article.published 
-                            ? '<span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded w-fit">Publié</span>'
-                            : '<span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded w-fit">Brouillon</span>'
+                            ? '<span class="px-2 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded w-fit">Publié</span>'
+                            : '<span class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 rounded w-fit">Brouillon</span>'
                         }
                     </div>
-                    ${article.excerpt ? `<p class="text-gray-600 mb-3 text-sm sm:text-base">${article.excerpt}</p>` : ''}
-                    <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500">
-                        <span>Par ${article.author.username}</span>
+                    ${excerpt ? `<p class="text-gray-600 dark:text-gray-400 mb-3 text-sm sm:text-base">${excerpt}</p>` : ''}
+                    ${tagsHtml}
+                    <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-3">
+                        <span>Par ${author}</span>
                         <span class="hidden sm:inline">•</span>
-                        <span>${new Date(article.created_at).toLocaleDateString('fr-FR')}</span>
+                        <span>${date}</span>
                         <span class="hidden sm:inline">•</span>
                         <span>👁️ ${article.views} vues</span>
                         <span class="hidden sm:inline">•</span>
@@ -96,24 +155,26 @@ function displayArticles() {
                     </div>
                 </div>
                 <div class="flex flex-wrap gap-2 lg:flex-nowrap lg:ml-4">
-                    <a href="/edit/${article.id}" class="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-md hover:bg-blue-700 text-xs sm:text-sm flex-1 lg:flex-none text-center">
+                    <a href="/edit/${article.id}" class="bg-blue-600 dark:bg-blue-500 text-white px-3 sm:px-4 py-2 rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 text-xs sm:text-sm flex-1 lg:flex-none text-center">
                         Modifier
                     </a>
                     <button onclick="togglePublished(${article.id}, ${article.published})" 
                             class="px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm flex-1 lg:flex-none ${article.published 
-                                ? 'bg-yellow-600 text-white hover:bg-yellow-700' 
-                                : 'bg-green-600 text-white hover:bg-green-700'
+                                ? 'bg-yellow-600 dark:bg-yellow-500 text-white hover:bg-yellow-700 dark:hover:bg-yellow-600' 
+                                : 'bg-green-600 dark:bg-green-500 text-white hover:bg-green-700 dark:hover:bg-green-600'
                             }">
                         ${article.published ? 'Dépublier' : 'Publier'}
                     </button>
-                    <button onclick="deleteArticle(${article.id}, '${article.title}')" 
-                            class="bg-red-600 text-white px-3 sm:px-4 py-2 rounded-md hover:bg-red-700 text-xs sm:text-sm flex-1 lg:flex-none">
+                    <button onclick="deleteArticle(${article.id}, '${title.replace(/'/g, "\\'")}')" 
+                            class="bg-red-600 dark:bg-red-500 text-white px-3 sm:px-4 py-2 rounded-md hover:bg-red-700 dark:hover:bg-red-600 text-xs sm:text-sm flex-1 lg:flex-none">
                         Supprimer
                     </button>
                 </div>
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
+    setSafeHTML(container, html);
 }
 
 // Toggle published
@@ -181,14 +242,36 @@ document.getElementById('filter-draft').addEventListener('click', function() {
 
 function updateFilterButtons() {
     document.querySelectorAll('[id^="filter-"]').forEach(btn => {
-        btn.classList.remove('bg-indigo-600', 'text-white');
-        btn.classList.add('bg-gray-200', 'text-gray-700');
+        btn.classList.remove('bg-indigo-600', 'dark:bg-indigo-500', 'text-white');
+        btn.classList.add('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
     });
     
     const activeBtn = document.getElementById(`filter-${currentFilter}`);
-    activeBtn.classList.remove('bg-gray-200', 'text-gray-700');
-    activeBtn.classList.add('bg-indigo-600', 'text-white');
+    activeBtn.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+    activeBtn.classList.add('bg-indigo-600', 'dark:bg-indigo-500', 'text-white');
 }
+
+// Recherche en temps réel
+document.getElementById('search-input').addEventListener('input', function(e) {
+    searchTerm = e.target.value;
+    const clearBtn = document.getElementById('clear-search');
+    
+    if (searchTerm.trim() !== '') {
+        clearBtn.classList.remove('hidden');
+    } else {
+        clearBtn.classList.add('hidden');
+    }
+    
+    displayArticles();
+});
+
+// Bouton pour effacer la recherche
+document.getElementById('clear-search').addEventListener('click', function() {
+    document.getElementById('search-input').value = '';
+    searchTerm = '';
+    this.classList.add('hidden');
+    displayArticles();
+});
 
 // Initialiser
 loadArticles();

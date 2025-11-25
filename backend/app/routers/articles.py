@@ -1,10 +1,11 @@
 """Routes pour la gestion des articles."""
+import logging
 import re
 from datetime import datetime
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.database import get_db
 from app.models import Article, ArticleLike, Tag, User
@@ -16,7 +17,9 @@ from app.schemas import (
     ArticleUpdate,
 )
 from app.services.discord import discord_service
+from app.utils.security import sanitize_text, sanitize_slug
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -69,7 +72,11 @@ async def list_articles(
         query = query.filter(Article.published == True)
 
     articles = (
-        query.order_by(Article.created_at.desc()).offset(skip).limit(limit).all()
+        query.options(selectinload(Article.tags))
+        .order_by(Article.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
     )
     return articles
 
@@ -153,18 +160,31 @@ async def create_article(
         HTTPException: Si l'utilisateur n'a pas les permissions ou si le slug existe
     """
     # Vérifier les permissions
-    has_permission = await check_article_permission(current_user)
-    if not has_permission:
+    try:
+        has_permission = await check_article_permission(current_user)
+        if not has_permission:
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    "Vous n'avez pas les permissions nécessaires pour créer des articles. "
+                    "Vous devez avoir un des rôles Discord autorisés. "
+                    "Vérifiez que votre rôle est dans ALLOWED_ROLE_IDS du fichier .env"
+                ),
+            )
+    except Exception as e:
+        logger.error(f"Erreur lors de la vérification des permissions: {e}")
         raise HTTPException(
-            status_code=403,
-            detail=(
-                "You don't have permission to create articles. "
-                "You need one of the allowed Discord roles."
-            ),
+            status_code=500,
+            detail=f"Erreur lors de la vérification des permissions: {str(e)}"
         )
 
+    # Sanitizer les inputs
+    sanitized_title = sanitize_text(article.title, max_length=200)
+    sanitized_excerpt = sanitize_text(article.excerpt, max_length=500) if article.excerpt else None
+    
     # Générer le slug si non fourni
-    slug = article.slug or slugify(article.title)
+    slug = article.slug or slugify(sanitized_title)
+    slug = sanitize_slug(slug)
 
     # Vérifier si le slug existe déjà
     existing = db.query(Article).filter(Article.slug == slug).first()
@@ -173,12 +193,12 @@ async def create_article(
             status_code=400, detail="Article with this slug already exists"
         )
 
-    # Créer l'article
+    # Créer l'article (le contenu Markdown sera sanitizé lors de l'affichage)
     db_article = Article(
-        title=article.title,
+        title=sanitized_title,
         slug=slug,
-        content=article.content,
-        excerpt=article.excerpt,
+        content=article.content,  # Le contenu Markdown sera sanitizé lors du rendu
+        excerpt=sanitized_excerpt,
         author_id=current_user.id,
         published=article.published,
     )
@@ -236,25 +256,26 @@ async def update_article(
             status_code=403, detail="You don't have permission to edit articles."
         )
 
-    # Mettre à jour
+    # Mettre à jour avec sanitization
     if article_update.title is not None:
-        db_article.title = article_update.title
+        db_article.title = sanitize_text(article_update.title, max_length=200)
     if article_update.slug is not None:
+        sanitized_slug = sanitize_slug(article_update.slug)
         # Vérifier si le nouveau slug existe déjà
         existing = (
             db.query(Article)
-            .filter(Article.slug == article_update.slug, Article.id != article_id)
+            .filter(Article.slug == sanitized_slug, Article.id != article_id)
             .first()
         )
         if existing:
             raise HTTPException(
                 status_code=400, detail="Article with this slug already exists"
             )
-        db_article.slug = article_update.slug
+        db_article.slug = sanitized_slug
     if article_update.content is not None:
-        db_article.content = article_update.content
+        db_article.content = article_update.content  # Le contenu Markdown sera sanitizé lors du rendu
     if article_update.excerpt is not None:
-        db_article.excerpt = article_update.excerpt
+        db_article.excerpt = sanitize_text(article_update.excerpt, max_length=500) if article_update.excerpt else None
     if article_update.published is not None:
         db_article.published = article_update.published
 
@@ -505,9 +526,10 @@ async def get_all_articles_for_management(
             detail="You don't have permission to manage articles.",
         )
 
-    # Récupérer tous les articles, triés par date de création (plus récents en premier)
+    # Récupérer tous les articles avec leurs tags, triés par date de création (plus récents en premier)
     articles = (
         db.query(Article)
+        .options(selectinload(Article.tags))
         .order_by(Article.created_at.desc())
         .all()
     )

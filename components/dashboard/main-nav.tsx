@@ -40,6 +40,12 @@ export function MainNav({
       >
         Settings
       </Link>
+      <Link
+        href="/moderation"
+        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+      >
+        Modération
+      </Link>
     </nav>
   )
 }

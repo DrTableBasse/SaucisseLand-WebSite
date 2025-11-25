@@ -1,4 +1,5 @@
 """Routes pour la gestion des tags."""
+import logging
 import re
 from typing import List
 
@@ -11,6 +12,7 @@ from app.routers.auth import get_current_user_dependency
 from app.schemas import TagCreate, TagResponse, TagUpdate
 from app.services.discord import discord_service
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -102,14 +104,22 @@ async def create_tag(
         HTTPException: Si l'utilisateur n'a pas les permissions ou si le tag existe déjà
     """
     # Vérifier les permissions
-    has_permission = await check_tag_permission(current_user)
-    if not has_permission:
+    try:
+        has_permission = await check_tag_permission(current_user)
+        if not has_permission:
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    "Vous n'avez pas les permissions nécessaires pour créer des tags. "
+                    "Vous devez avoir un des rôles Discord autorisés. "
+                    "Vérifiez que votre rôle est dans ALLOWED_ROLE_IDS du fichier .env"
+                ),
+            )
+    except Exception as e:
+        logger.error(f"Erreur lors de la vérification des permissions: {e}")
         raise HTTPException(
-            status_code=403,
-            detail=(
-                "You don't have permission to create tags. "
-                "You need one of the allowed Discord roles."
-            ),
+            status_code=500,
+            detail=f"Erreur lors de la vérification des permissions: {str(e)}"
         )
 
     # Générer le slug si non fourni

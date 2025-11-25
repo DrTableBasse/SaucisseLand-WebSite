@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     # Discord OAuth
     DISCORD_CLIENT_ID: str
     DISCORD_CLIENT_SECRET: str
-    DISCORD_REDIRECT_URI: str = ""  # Par défaut: http://localhost:8000/api/auth/callback/social/discord
+    DISCORD_REDIRECT_URI: str = ""  # Construit automatiquement depuis BASE_URL si vide: {BASE_URL}/api/auth/callback/social/discord
     DISCORD_GUILD_ID: str
     DISCORD_BOT_TOKEN: str
     

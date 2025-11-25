@@ -28,12 +28,13 @@ async def login():
     Returns:
         RedirectResponse: Redirection vers l'URL d'autorisation Discord
     """
-    # Utiliser DISCORD_REDIRECT_URI si défini, sinon utiliser localhost
+    # Utiliser DISCORD_REDIRECT_URI si défini, sinon construire depuis BASE_URL
     if settings.DISCORD_REDIRECT_URI:
         redirect_uri = settings.DISCORD_REDIRECT_URI
     else:
-        # Par défaut, utiliser localhost pour que ça fonctionne sur tous les PC
-        redirect_uri = "http://localhost:8000/api/auth/callback/social/discord"
+        # Construire le redirect URI depuis BASE_URL pour que tous les utilisateurs pointent vers le serveur
+        base_url = settings.BASE_URL.rstrip("/")
+        redirect_uri = f"{base_url}/api/auth/callback/social/discord"
 
     # Encoder le redirect_uri pour l'URL
     redirect_uri_encoded = quote(redirect_uri, safe="")

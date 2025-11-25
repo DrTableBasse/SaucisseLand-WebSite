@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block title %}Modération - Discord Blog{% endblock %}
+
+{% block content %}
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 lg:p-8 transition-colors duration-200">
+    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6">⚠️ Modération Discord</h1>
+    
+    {% if not user %}
+    <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 mb-6">
+        <p class="text-yellow-800 dark:text-yellow-300">Vous devez être connecté pour accéder à cette page.</p>
+        <a href="/api/auth/login" class="mt-2 inline-block text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300">Se connecter avec Discord →</a>
+    </div>
+    {% else %}
+    
+    <div class="mb-6">
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Donner un avertissement</h2>
+        <p class="text-gray-600 dark:text-gray-400 mb-4">Utilisez ce formulaire pour donner un avertissement à un utilisateur Discord via le bot Hermes.</p>
+        
+        <form id="warn-form" class="space-y-4">
+            <div class="relative">
+                <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Pseudo Discord de l'utilisateur <span class="text-red-500 dark:text-red-400">*</span>
+                </label>
+                <input type="text" id="username" name="username" required
+                       placeholder="ricardomilos__"
+                       autocomplete="off"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+                <div id="autocomplete-results" class="hidden absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    <!-- Les résultats seront injectés ici -->
+                </div>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Entrez le pseudo Discord de l'utilisateur (ex: ricardomilos__). Vous pouvez aussi utiliser l'ID Discord si vous préférez.</p>
+            </div>
+            
+            <div>
+                <label for="reason" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Raison de l'avertissement <span class="text-red-500 dark:text-red-400">*</span>
+                </label>
+                <input type="text" id="reason" name="reason" required
+                       placeholder="Comportement inapproprié"
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+            </div>
+            
+            <div id="error-message" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400 dark:text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-red-800 dark:text-red-300" id="error-text"></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="success-message" class="hidden bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-green-400 dark:text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-green-800 dark:text-green-300" id="success-text"></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-3 sm:space-x-4">
+                <button type="submit" id="submit-btn"
+                        class="bg-indigo-600 dark:bg-indigo-500 text-white px-4 sm:px-6 py-2 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span id="submit-text">Donner l'avertissement</span>
+                    <span id="submit-loading" class="hidden">Envoi en cours...</span>
+                </button>
+                <button type="button" onclick="resetForm()"
+                        class="bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 sm:px-6 py-2 rounded-md hover:bg-gray-400 dark:hover:bg-gray-600 text-sm sm:text-base">
+                    Réinitialiser
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    {% endif %}
+</div>
+
+<script>
+function showError(message) {
+    const errorDiv = document.getElementById('error-message');
+    const errorText = document.getElementById('error-text');
+    const successDiv = document.getElementById('success-message');
+    
+    errorText.textContent = message;
+    errorDiv.classList.remove('hidden');
+    successDiv.classList.add('hidden');
+}
+
+function showSuccess(message) {
+    const successDiv = document.getElementById('success-message');
+    const successText = document.getElementById('success-text');
+    const errorDiv = document.getElementById('error-message');
+    
+    successText.textContent = message;
+    successDiv.classList.remove('hidden');
+    errorDiv.classList.add('hidden');
+}
+
+function resetForm() {
+    document.getElementById('warn-form').reset();
+    document.getElementById('error-message').classList.add('hidden');
+    document.getElementById('success-message').classList.add('hidden');
+}
+
+// Autocomplétion pour le champ username
+let searchTimeout = null;
+let selectedUser = null;
+
+document.getElementById('username').addEventListener('input', function(e) {
+    const query = e.target.value.trim();
+    const resultsDiv = document.getElementById('autocomplete-results');
+    
+    // Réinitialiser la sélection
+    selectedUser = null;
+    
+    // Annuler la recherche précédente si elle existe
+    if (searchTimeout) {
+        clearTimeout(searchTimeout);
+    }
+    
+    // Si le champ est vide ou trop court, cacher les résultats
+    if (query.length < 2) {
+        resultsDiv.classList.add('hidden');
+        return;
+    }
+    
+    // Délai pour éviter trop de requêtes
+    searchTimeout = setTimeout(async () => {
+        try {
+            const response = await fetch(`/api/moderation/search-users?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            
+            if (data.users && data.users.length > 0) {
+                const html = data.users.map(user => {
+                    const displayName = escapeHTML(user.display_name || '');
+                    const username = escapeHTML(user.username || '');
+                    const avatarUrl = escapeHTML(user.avatar_url || 'https://cdn.discordapp.com/embed/avatars/0.png');
+                    const nickname = user.nickname ? `<div class="text-xs text-gray-500 dark:text-gray-400 truncate">@${escapeHTML(user.username || '')}</div>` : '';
+                    
+                    return `<div class="autocomplete-item px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0" 
+                         data-username="${escapeHTML(user.username || '')}" 
+                         data-user-id="${escapeHTML(String(user.id || ''))}">
+                        <img src="${avatarUrl}" 
+                             alt="${displayName}" 
+                             class="w-8 h-8 rounded-full flex-shrink-0"
+                             onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                        <div class="flex-1 min-w-0">
+                            <div class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                ${displayName}
+                            </div>
+                            ${nickname}
+                        </div>
+                    </div>`;
+                }).join('');
+                setSafeHTML(resultsDiv, html);
+                
+                // Ajouter les event listeners aux items
+                resultsDiv.querySelectorAll('.autocomplete-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const username = this.getAttribute('data-username');
+                        document.getElementById('username').value = username;
+                        selectedUser = {
+                            username: username,
+                            id: this.getAttribute('data-user-id')
+                        };
+                        resultsDiv.classList.add('hidden');
+                    });
+                });
+                
+                resultsDiv.classList.remove('hidden');
+            } else {
+                resultsDiv.classList.add('hidden');
+            }
+        } catch (error) {
+            console.error('Erreur lors de la recherche:', error);
+            resultsDiv.classList.add('hidden');
+        }
+    }, 300); // Délai de 300ms
+});
+
+// Cacher les résultats quand on clique en dehors
+document.addEventListener('click', function(e) {
+    const usernameInput = document.getElementById('username');
+    const resultsDiv = document.getElementById('autocomplete-results');
+    
+    if (!usernameInput.contains(e.target) && !resultsDiv.contains(e.target)) {
+        resultsDiv.classList.add('hidden');
+    }
+});
+
+// Gérer les touches clavier dans l'autocomplétion
+document.getElementById('username').addEventListener('keydown', function(e) {
+    const resultsDiv = document.getElementById('autocomplete-results');
+    const items = resultsDiv.querySelectorAll('.autocomplete-item');
+    
+    if (!resultsDiv.classList.contains('hidden') && items.length > 0) {
+        const currentItem = resultsDiv.querySelector('.autocomplete-item.highlighted');
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (currentItem) {
+                currentItem.classList.remove('highlighted', 'bg-gray-100', 'dark:bg-gray-700');
+                const next = currentItem.nextElementSibling;
+                if (next) {
+                    next.classList.add('highlighted', 'bg-gray-100', 'dark:bg-gray-700');
+                } else {
+                    items[0].classList.add('highlighted', 'bg-gray-100', 'dark:bg-gray-700');
+                }
+            } else {
+                items[0].classList.add('highlighted', 'bg-gray-100', 'dark:bg-gray-700');
+            }
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (currentItem) {
+                currentItem.classList.remove('highlighted', 'bg-gray-100', 'dark:bg-gray-700');
+                const prev = currentItem.previousElementSibling;
+                if (prev) {
+                    prev.classList.add('highlighted', 'bg-gray-100', 'dark:bg-gray-700');
+                } else {
+                    items[items.length - 1].classList.add('highlighted', 'bg-gray-100', 'dark:bg-gray-700');
+                }
+            } else {
+                items[items.length - 1].classList.add('highlighted', 'bg-gray-100', 'dark:bg-gray-700');
+            }
+        } else if (e.key === 'Enter' && currentItem) {
+            e.preventDefault();
+            currentItem.click();
+        }
+    }
+});
+
+document.getElementById('warn-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitBtn = document.getElementById('submit-btn');
+    const submitText = document.getElementById('submit-text');
+    const submitLoading = document.getElementById('submit-loading');
+    
+    // Désactiver le bouton et afficher le loading
+    submitBtn.disabled = true;
+    submitText.classList.add('hidden');
+    submitLoading.classList.remove('hidden');
+    
+    // Cacher les messages précédents
+    document.getElementById('error-message').classList.add('hidden');
+    document.getElementById('success-message').classList.add('hidden');
+    
+    const username = document.getElementById('username').value.trim();
+    const reason = document.getElementById('reason').value.trim();
+    
+    // Validation
+    if (!username) {
+        showError("Le pseudo de l'utilisateur est requis");
+        submitBtn.disabled = false;
+        submitText.classList.remove('hidden');
+        submitLoading.classList.add('hidden');
+        return;
+    }
+    
+    if (!reason) {
+        showError("La raison est requise");
+        submitBtn.disabled = false;
+        submitText.classList.remove('hidden');
+        submitLoading.classList.add('hidden');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/moderation/warn', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: username,
+                reason: reason
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            const errorMessage = data.detail || data.message || "Une erreur est survenue";
+            showError(errorMessage);
+        } else {
+            const warnCount = data.warn_count || 0;
+            showSuccess(`Avertissement donné avec succès ! L'utilisateur a maintenant ${warnCount} avertissement(s).`);
+            // Réinitialiser le formulaire après 3 secondes
+            setTimeout(() => {
+                resetForm();
+            }, 3000);
+        }
+    } catch (error) {
+        showError("Erreur de connexion. Vérifiez que le bot Hermes est en ligne.");
+        console.error('Erreur:', error);
+    } finally {
+        // Réactiver le bouton
+        submitBtn.disabled = false;
+        submitText.classList.remove('hidden');
+        submitLoading.classList.add('hidden');
+    }
+});
+</script>
+{% endblock %}
+

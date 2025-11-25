@@ -316,9 +316,21 @@ async def edit_page(article_id: int, request: Request):
             },
         )
 
+    # Convertir les tags en dictionnaires pour la sérialisation JSON
+    article_tags_dict = [
+        {"id": tag.id, "name": tag.name, "slug": tag.slug, "color": tag.color, "description": tag.description}
+        for tag in article.tags
+    ]
+    
     return templates.TemplateResponse(
         "edit.html",
-        {"request": request, "user": user, "article": article, "can_create_articles": True},
+        {
+            "request": request,
+            "user": user,
+            "article": article,
+            "article_tags_json": article_tags_dict,
+            "can_create_articles": True
+        },
     )
 
 
@@ -585,6 +597,156 @@ async def debug_page(request: Request):
         "error": error,
         "debug_info": debug_info
     })
+
+@app.get("/moderation", response_class=HTMLResponse)
+async def moderation_page(request: Request):
+    """Page de modération Discord.
+
+    Args:
+        request: Objet Request FastAPI
+
+    Returns:
+        HTMLResponse: Page de modération ou page d'erreur
+    """
+    from app.database import get_db
+    from app.services.discord import discord_service
+
+    db = next(get_db())
+    user = None
+    can_create_articles = False
+    
+    try:
+        user = get_current_user_dependency(request, db)
+        can_create_articles = await discord_service.check_user_has_allowed_role(
+            user.discord_id
+        )
+    except HTTPException:
+        pass
+    
+    return templates.TemplateResponse(
+        "moderation.html",
+        {
+            "request": request,
+            "user": user,
+            "can_create_articles": can_create_articles,
+        },
+    )
+
+@app.get("/api/moderation/search-users")
+async def search_users_api(request: Request, q: str = ""):
+    """API pour rechercher des utilisateurs Discord avec autocomplétion.
+    
+    Args:
+        request: Objet Request FastAPI
+        q: Terme de recherche (pseudo Discord)
+    
+    Returns:
+        JSON: Liste des utilisateurs trouvés avec leurs informations
+    """
+    from app.database import get_db
+    from app.services.discord import discord_service
+    
+    db = next(get_db())
+    
+    try:
+        # Vérifier l'authentification
+        user = get_current_user_dependency(request, db)
+        
+        # Rechercher les utilisateurs
+        users = await discord_service.search_users_by_username(q, limit=10)
+        
+        return {"users": users}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur dans /api/moderation/search-users: {e}")
+        return {"users": []}
+
+@app.post("/api/moderation/warn")
+async def warn_user_api(request: Request):
+    """API pour donner un avertissement via le bot Hermes.
+
+    Args:
+        request: Objet Request FastAPI
+
+    Returns:
+        JSON: Résultat de l'opération
+    """
+    from app.database import get_db
+    from app.services.discord import discord_service
+    import os
+    import aiohttp
+    
+    db = next(get_db())
+    
+    try:
+        # Vérifier l'authentification
+        user = get_current_user_dependency(request, db)
+        
+        # Récupérer les données de la requête
+        body = await request.json()
+        username_or_id = body.get("username") or body.get("user_id")  # Support des deux formats
+        reason = body.get("reason", "Aucune raison spécifiée")
+        
+        # Validation
+        if not username_or_id:
+            raise HTTPException(status_code=400, detail="username ou user_id est requis")
+        
+        # Déterminer si c'est un ID (numérique) ou un pseudo
+        user_id = None
+        if username_or_id.isdigit():
+            # C'est un ID Discord
+            user_id = int(username_or_id)
+        else:
+            # C'est un pseudo, chercher l'utilisateur
+            member = await discord_service.find_user_by_username(username_or_id)
+            if not member:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Utilisateur '{username_or_id}' non trouvé sur le serveur Discord"
+                )
+            user_id = int(member.get("user", {}).get("id"))
+            logger.info(f"Utilisateur trouvé: {username_or_id} -> ID: {user_id}")
+        
+        # Configuration de l'API Hermes
+        hermes_api_url = os.getenv("HERMES_API_URL", "http://localhost:8001")
+        hermes_api_token = os.getenv("HERMES_API_TOKEN")
+        
+        if not hermes_api_token:
+            raise HTTPException(
+                status_code=500,
+                detail="Configuration serveur manquante (HERMES_API_TOKEN)"
+            )
+        
+        # Appeler l'API Hermes
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f"{hermes_api_url}/warn",
+                headers={
+                    "Authorization": f"Bearer {hermes_api_token}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "user_id": user_id,
+                    "reason": reason,
+                    "moderator_id": int(user.discord_id),
+                    "moderator_name": user.username,
+                },
+            ) as response:
+                data = await response.json()
+                
+                if not response.ok:
+                    error_message = data.get("detail", "Erreur lors de l'appel à l'API Hermes")
+                    raise HTTPException(status_code=response.status, detail=error_message)
+                
+                return data
+                
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur dans /api/moderation/warn: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 @app.get("/health")
 async def health():
