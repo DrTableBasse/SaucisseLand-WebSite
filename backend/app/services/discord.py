@@ -224,7 +224,14 @@ class DiscordService:
                 
                 for row in rows:
                     user_id, db_username, db_nickname, avatar_hash = row
-                    user_id_str = str(user_id)
+                    # S'assurer que user_id est converti en string de manière sûre
+                    # user_id peut être un int, un str, ou un Decimal depuis PostgreSQL
+                    if isinstance(user_id, (int, float)):
+                        user_id_str = str(int(user_id))
+                    else:
+                        user_id_str = str(user_id)
+                    
+                    logger.info(f"🔍 DEBUG search_users_by_username: user_id brut={user_id} (type: {type(user_id)}), user_id_str={user_id_str}, username={db_username}")
                     
                     # Construire l'URL de l'avatar depuis la base de données
                     if avatar_hash:
@@ -240,6 +247,8 @@ class DiscordService:
                         "display_name": db_nickname if db_nickname else db_username,
                         "avatar_url": avatar_url
                     })
+                    
+                    logger.info(f"🔍 DEBUG search_users_by_username: Utilisateur ajouté avec id={user_id_str}")
                 
                 return users
                     

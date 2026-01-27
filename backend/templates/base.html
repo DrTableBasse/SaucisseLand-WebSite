@@ -15,6 +15,74 @@
     <!-- EasyMDE - Éditeur Markdown -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
     <link rel="stylesheet" href="/static/css/easymde-dark.css">
+    <style>
+        /* Style personnalisé pour les checkboxes */
+        input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            position: relative;
+            display: inline-block;
+            width: 1.25rem !important; /* w-5 = 20px */
+            height: 1.25rem !important; /* h-5 = 20px */
+            min-width: 1.25rem !important;
+            min-height: 1.25rem !important;
+            flex-shrink: 0;
+        }
+        
+        input[type="checkbox"]:checked {
+            background-color: rgb(99, 102, 241) !important; /* indigo-600 */
+            border-color: rgb(99, 102, 241) !important;
+        }
+        
+        input[type="checkbox"]:checked::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%) rotate(45deg);
+            width: 4px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            display: block;
+        }
+        
+        input[type="checkbox"]:not(:checked) {
+            background-color: white;
+        }
+        
+        input[type="checkbox"]:hover {
+            border-color: rgb(99, 102, 241) !important;
+        }
+        
+        input[type="checkbox"]:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
+        }
+        
+        /* Dark mode */
+        .dark input[type="checkbox"]:checked {
+            background-color: rgb(99, 102, 241) !important;
+            border-color: rgb(99, 102, 241) !important;
+        }
+        
+        .dark input[type="checkbox"]:not(:checked) {
+            background-color: rgb(55, 65, 81) !important; /* gray-700 */
+            border-color: rgb(75, 85, 99) !important; /* gray-600 */
+        }
+        
+        .dark input[type="checkbox"]:hover {
+            border-color: rgb(99, 102, 241) !important;
+        }
+        
+        /* S'assurer que les checkboxes sont toujours visibles */
+        label:has(input[type="checkbox"]) {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+    </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
@@ -25,10 +93,10 @@
         const DOMPURIFY_CONFIG = {
             ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
                            'ul', 'ol', 'li', 'blockquote', 'code', 'pre', 'a', 'img', 'hr',
-                           'table', 'thead', 'tbody', 'tr', 'th', 'td', 'del', 'ins', 'sub', 'sup', 'span', 'div', 'button'],
-            ALLOWED_ATTR: ['href', 'title', 'target', 'rel', 'src', 'alt', 'class', 'align', 'colspan', 'rowspan', 'style', 'type', 'data-tag-id', 'data-disabled'],
+                           'table', 'thead', 'tbody', 'tr', 'th', 'td', 'del', 'ins', 'sub', 'sup', 'span', 'div', 'button', 'input', 'label'],
+            ALLOWED_ATTR: ['href', 'title', 'target', 'rel', 'src', 'alt', 'class', 'align', 'colspan', 'rowspan', 'style', 'type', 'data-tag-id', 'data-disabled', 'data-warn-id', 'data-user-id', 'data-username', 'data-reason', 'data-warn-ids', 'id', 'for', 'checked'],
             ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
-            FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'input', 'select', 'textarea', 'meta', 'link', 'style'],
+            FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form', 'select', 'textarea', 'meta', 'link', 'style'],
             FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onmouseout', 'onfocus', 'onblur', 'onchange', 'onsubmit', 'onreset', 'onselect', 'onkeydown', 'onkeypress', 'onkeyup', 'onabort', 'onbeforeunload', 'onerror', 'onhashchange', 'onload', 'onpageshow', 'onpagehide', 'onresize', 'onscroll', 'onunload'],
             KEEP_CONTENT: true,
             RETURN_DOM: false,
@@ -127,6 +195,12 @@
                             ⚠️ Modération
                         </a>
                     </div>
+                    <!-- Catégorie Administration -->
+                    <div class="relative group">
+                        <a href="/admin" class="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 text-sm lg:text-base px-3 py-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center">
+                            ⚙️ Administration
+                        </a>
+                    </div>
                     {% endif %}
                     
                     <!-- Catégorie Compte -->
@@ -217,6 +291,10 @@
                     <!-- Modération (mobile) -->
                     <a href="/moderation" class="block px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md">
                         ⚠️ Modération
+                    </a>
+                    <!-- Administration (mobile) -->
+                    <a href="/admin" class="block px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md">
+                        ⚙️ Administration
                     </a>
                     {% endif %}
                     

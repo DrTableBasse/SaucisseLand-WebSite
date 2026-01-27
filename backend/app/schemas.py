@@ -158,6 +158,61 @@ class TagResponse(TagBase):
         from_attributes = True
 
 
+class AppConfigBase(BaseModel):
+    """Schéma de base pour une configuration."""
+
+    key: str
+    value: str
+    description: Optional[str] = None
+    category: str = "general"
+    is_sensitive: bool = False
+
+
+class AppConfigCreate(AppConfigBase):
+    """Schéma pour la création d'une configuration."""
+
+    pass
+
+
+class AppConfigUpdate(BaseModel):
+    """Schéma pour la mise à jour d'une configuration."""
+
+    value: Optional[str] = None
+    description: Optional[str] = None
+    category: Optional[str] = None
+    is_sensitive: Optional[bool] = None
+
+
+class AppConfigResponse(AppConfigBase):
+    """Schéma de réponse pour une configuration."""
+
+    id: int
+    updated_by: Optional[int] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        """Configuration Pydantic."""
+
+        from_attributes = True
+
+
+class HealthMetricsResponse(BaseModel):
+    """Schéma de réponse pour les métriques de santé."""
+
+    status: str
+    timestamp: datetime
+    database: dict
+    application: dict
+    metrics_enabled: bool
+
+
+class MetricsToggleRequest(BaseModel):
+    """Schéma pour activer/désactiver les métriques."""
+
+    enabled: bool
+
+
 # Reconstruire les modèles qui utilisent des références forward
 ArticleResponse.model_rebuild()
 ArticleListResponse.model_rebuild()

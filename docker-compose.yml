@@ -21,6 +21,7 @@ services:
       - ./backend/uploads:/app/uploads
       - ./backend/static:/app/static
       - ./backend/templates:/app/templates
+      - ./backend/app:/app/app
     ports:
       - "8000:8000"
     # Utilise la base de données PostgreSQL partagée du bot Hermes

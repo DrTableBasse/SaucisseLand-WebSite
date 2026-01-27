@@ -13,75 +13,297 @@
     </div>
     {% else %}
     
-    <div class="mb-6">
-        <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Donner un avertissement</h2>
-        <p class="text-gray-600 dark:text-gray-400 mb-4">Utilisez ce formulaire pour donner un avertissement à un utilisateur Discord via le bot Hermes.</p>
+    <!-- Section principale : Recherche et actions -->
+    <div class="mb-8">
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">Rechercher un utilisateur</h2>
         
-        <form id="warn-form" class="space-y-4">
-            <div class="relative">
-                <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Pseudo Discord de l'utilisateur <span class="text-red-500 dark:text-red-400">*</span>
-                </label>
-                <input type="text" id="username" name="username" required
-                       placeholder="ricardomilos__"
-                       autocomplete="off"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
-                <div id="autocomplete-results" class="hidden absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                    <!-- Les résultats seront injectés ici -->
+        <div class="relative mb-6">
+            <label for="moderation-username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Pseudo Discord
+            </label>
+            <input type="text" id="moderation-username" name="moderation-username"
+                   placeholder="ricardomilos__"
+                   autocomplete="off"
+                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+            <div id="moderation-autocomplete-results" class="hidden absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                <!-- Les résultats seront injectés ici -->
+            </div>
+        </div>
+        
+        <!-- Informations de l'utilisateur sélectionné -->
+        <div id="selected-user-info" class="hidden mb-6 p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg">
+            <div class="flex items-center gap-4 mb-4">
+                <img id="selected-user-avatar" src="" alt="" class="w-16 h-16 rounded-full">
+                <div class="flex-1">
+                    <h3 id="selected-user-name" class="text-lg font-semibold text-gray-900 dark:text-white"></h3>
+                    <p id="selected-user-id" class="text-sm text-gray-600 dark:text-gray-400"></p>
                 </div>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Entrez le pseudo Discord de l'utilisateur (ex: ricardomilos__). Vous pouvez aussi utiliser l'ID Discord si vous préférez.</p>
             </div>
             
-            <div>
-                <label for="reason" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Raison de l'avertissement <span class="text-red-500 dark:text-red-400">*</span>
-                </label>
-                <input type="text" id="reason" name="reason" required
-                       placeholder="Comportement inapproprié"
-                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
-            </div>
-            
-            <div id="error-message" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-red-400 dark:text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+            <!-- Actions de modération -->
+            <div class="mb-6">
+                <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Actions rapides</h4>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                    <button id="quick-warn-btn" class="flex flex-col items-center justify-center gap-1 px-3 py-2 bg-yellow-600 dark:bg-yellow-500 text-white rounded-md hover:bg-yellow-700 dark:hover:bg-yellow-600 transition-colors text-xs font-medium">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                         </svg>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-red-800 dark:text-red-300" id="error-text"></p>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="success-message" class="hidden bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md p-4">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-green-400 dark:text-green-500" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        Avertir
+                    </button>
+                    <button id="quick-kick-btn" class="flex flex-col items-center justify-center gap-1 px-3 py-2 bg-red-600 dark:bg-red-500 text-white rounded-md hover:bg-red-700 dark:hover:bg-red-600 transition-colors text-xs font-medium">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
                         </svg>
+                        Expulser
+                    </button>
+                    <button id="quick-ban-btn" class="flex flex-col items-center justify-center gap-1 px-3 py-2 bg-red-700 dark:bg-red-600 text-white rounded-md hover:bg-red-800 dark:hover:bg-red-700 transition-colors text-xs font-medium">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                        </svg>
+                        Bannir
+                    </button>
+                    <button id="quick-mute-btn" class="flex flex-col items-center justify-center gap-1 px-3 py-2 bg-orange-600 dark:bg-orange-500 text-white rounded-md hover:bg-orange-700 dark:hover:bg-orange-600 transition-colors text-xs font-medium">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" clip-rule="evenodd"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path>
+                        </svg>
+                        Muter
+                    </button>
+                    <button id="quick-unmute-btn" class="flex flex-col items-center justify-center gap-1 px-3 py-2 bg-green-600 dark:bg-green-500 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-600 transition-colors text-xs font-medium">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+                        </svg>
+                        Unmuter
+                    </button>
+                    <button id="quick-tempban-btn" class="flex flex-col items-center justify-center gap-1 px-3 py-2 bg-red-600 dark:bg-red-500 text-white rounded-md hover:bg-red-700 dark:hover:bg-red-600 transition-colors text-xs font-medium">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Temp Ban
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mt-2">
+                    <button id="quick-tempmute-btn" class="flex flex-col items-center justify-center gap-1 px-3 py-2 bg-orange-600 dark:bg-orange-500 text-white rounded-md hover:bg-orange-700 dark:hover:bg-orange-600 transition-colors text-xs font-medium">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Temp Mute
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Section des avertissements de l'utilisateur sélectionné -->
+        <div id="user-warns-section" class="hidden mt-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-sm font-semibold text-gray-800 dark:text-white">Avertissements</h4>
+                    <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg px-3 py-1">
+                        <span class="text-xs text-gray-600 dark:text-gray-400">Total: </span>
+                        <span id="selected-user-warn-count" class="text-sm font-bold text-blue-600 dark:text-blue-400">0</span>
                     </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-green-800 dark:text-green-300" id="success-text"></p>
+                </div>
+                <!-- Actions groupées -->
+                <div id="user-warns-bulk-actions" class="hidden mb-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span class="text-sm font-medium text-indigo-900 dark:text-indigo-300">
+                                <span id="user-selected-count">0</span> avertissement(s) sélectionné(s)
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <button id="user-select-all-warns" class="px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                                Tout sélectionner
+                            </button>
+                            <button id="user-deselect-all-warns" class="px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                                Tout désélectionner
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button id="user-edit-selected-warns" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                            Modifier sélectionnés
+                        </button>
+                        <button id="user-delete-selected-warns" class="px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-500 rounded-md hover:bg-red-700 dark:hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                            Supprimer sélectionnés
+                        </button>
+                    </div>
+                </div>
+                <div id="user-warns-container" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div class="text-center py-4 text-gray-500 dark:text-gray-400">
+                        Chargement...
                     </div>
                 </div>
             </div>
-            
-            <div class="flex flex-col sm:flex-row gap-3 sm:space-x-4">
-                <button type="submit" id="submit-btn"
-                        class="bg-indigo-600 dark:bg-indigo-500 text-white px-4 sm:px-6 py-2 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed">
-                    <span id="submit-text">Donner l'avertissement</span>
-                    <span id="submit-loading" class="hidden">Envoi en cours...</span>
-                </button>
-                <button type="button" onclick="resetForm()"
-                        class="bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 sm:px-6 py-2 rounded-md hover:bg-gray-400 dark:hover:bg-gray-600 text-sm sm:text-base">
-                    Réinitialiser
-                </button>
-            </div>
-        </form>
+        </div>
     </div>
     
     {% endif %}
+</div>
+
+<!-- Modale de confirmation -->
+<div id="confirm-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4" id="confirm-title">Confirmer l'action</h3>
+        <p class="text-gray-700 dark:text-gray-300 mb-6" id="confirm-message"></p>
+        <div class="flex justify-end gap-3">
+            <button id="confirm-cancel" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                Annuler
+            </button>
+            <button id="confirm-ok" class="px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-500 rounded-md hover:bg-red-700 dark:hover:bg-red-600 transition-colors">
+                Confirmer
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modale de message -->
+<div id="message-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+        <div class="flex items-start">
+            <div class="flex-shrink-0" id="message-icon"></div>
+            <div class="ml-3 flex-1">
+                <h3 class="text-lg font-semibold mb-2" id="message-title"></h3>
+                <p class="text-sm" id="message-text"></p>
+            </div>
+        </div>
+        <div class="mt-4 flex justify-end">
+            <button id="message-close" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                Fermer
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modale d'édition de raison (individuelle) -->
+<div id="edit-reason-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Modifier la raison</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Avertissement #<span id="edit-warn-id-display"></span></p>
+        <textarea id="edit-reason-input" 
+                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  rows="4"
+                  placeholder="Nouvelle raison de l'avertissement"></textarea>
+        <div class="mt-4 flex justify-end gap-3">
+            <button id="edit-reason-cancel" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                Annuler
+            </button>
+            <button id="edit-reason-save" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 dark:bg-indigo-500 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors">
+                Enregistrer
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modale d'édition de masse -->
+<div id="bulk-edit-reason-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-lg w-full mx-4">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Modifier la raison (édition de masse)</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            Vous allez modifier <span id="bulk-edit-count" class="font-semibold text-indigo-600 dark:text-indigo-400">0</span> avertissement(s)
+        </p>
+        <div class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+            <p class="text-xs text-yellow-800 dark:text-yellow-300">
+                ⚠️ <strong>Attention :</strong> Cette action remplacera la raison de tous les avertissements sélectionnés par la nouvelle raison.
+            </p>
+        </div>
+        <textarea id="bulk-edit-reason-input" 
+                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  rows="4"
+                  placeholder="Nouvelle raison pour tous les avertissements sélectionnés"></textarea>
+        <div class="mt-4 flex justify-end gap-3">
+            <button id="bulk-edit-reason-cancel" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                Annuler
+            </button>
+            <button id="bulk-edit-reason-save" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 dark:bg-indigo-500 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors">
+                Modifier tous les sélectionnés
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour les actions de modération rapides -->
+<div id="moderation-action-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4" id="moderation-action-title"></h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4" id="moderation-action-description"></p>
+        <div class="mb-4">
+            <label for="moderation-action-reason" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Raison <span class="text-red-500 dark:text-red-400">*</span>
+            </label>
+            <textarea id="moderation-action-reason" 
+                      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                      rows="3"
+                      placeholder="Raison de l'action de modération"></textarea>
+        </div>
+        <div class="flex justify-end gap-3">
+            <button id="moderation-action-cancel" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                Annuler
+            </button>
+            <button id="moderation-action-confirm" class="px-4 py-2 text-sm font-medium text-white rounded-md transition-colors">
+                Confirmer
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour les actions temporaires -->
+<div id="temp-moderation-action-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4" id="temp-moderation-action-title"></h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4" id="temp-moderation-action-description"></p>
+        <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="temp-moderation-duration" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Durée <span class="text-red-500 dark:text-red-400">*</span>
+                    </label>
+                    <input type="number" id="temp-moderation-duration" min="1" 
+                           class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                           placeholder="1">
+                </div>
+                <div>
+                    <label for="temp-moderation-unit" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Unité <span class="text-red-500 dark:text-red-400">*</span>
+                    </label>
+                    <select id="temp-moderation-unit" 
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        <option value="secondes">Secondes</option>
+                        <option value="minutes">Minutes</option>
+                        <option value="heures">Heures</option>
+                        <option value="jours">Jours</option>
+                        <option value="mois">Mois</option>
+                        <option value="années">Années</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label for="temp-moderation-reason" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Raison <span class="text-red-500 dark:text-red-400">*</span>
+                </label>
+                <textarea id="temp-moderation-reason" 
+                          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                          rows="3"
+                          placeholder="Raison de l'action de modération"></textarea>
+            </div>
+        </div>
+        <div class="flex justify-end gap-3 mt-4">
+            <button id="temp-moderation-action-cancel" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                Annuler
+            </button>
+            <button id="temp-moderation-action-confirm" class="px-4 py-2 text-sm font-medium text-white rounded-md transition-colors">
+                Confirmer
+            </button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -105,36 +327,49 @@ function showSuccess(message) {
     errorDiv.classList.add('hidden');
 }
 
+// Fonction resetForm - CODE OBSOLÈTE (formulaire supprimé)
+/*
 function resetForm() {
-    document.getElementById('warn-form').reset();
-    document.getElementById('error-message').classList.add('hidden');
-    document.getElementById('success-message').classList.add('hidden');
+    const warnForm = document.getElementById('warn-form');
+    const errorMsg = document.getElementById('error-message');
+    const successMsg = document.getElementById('success-message');
+    
+    if (warnForm) warnForm.reset();
+    if (errorMsg) errorMsg.classList.add('hidden');
+    if (successMsg) successMsg.classList.add('hidden');
 }
+*/
 
 // Autocomplétion pour le champ username
 let searchTimeout = null;
 let selectedUser = null;
 
-document.getElementById('username').addEventListener('input', function(e) {
-    const query = e.target.value.trim();
-    const resultsDiv = document.getElementById('autocomplete-results');
-    
-    // Réinitialiser la sélection
-    selectedUser = null;
-    
-    // Annuler la recherche précédente si elle existe
-    if (searchTimeout) {
-        clearTimeout(searchTimeout);
-    }
-    
-    // Si le champ est vide ou trop court, cacher les résultats
-    if (query.length < 2) {
-        resultsDiv.classList.add('hidden');
-        return;
-    }
-    
-    // Délai pour éviter trop de requêtes
-    searchTimeout = setTimeout(async () => {
+// ========== CODE OBSOLÈTE - Formulaire d'avertissement supprimé lors de la simplification ==========
+// L'autocomplétion est maintenant gérée par initModerationAutocomplete() pour moderation-username
+// Ce code est commenté pour éviter les erreurs JavaScript
+/*
+const usernameInput = document.getElementById('username');
+if (usernameInput) {
+    usernameInput.addEventListener('input', function(e) {
+        const query = e.target.value.trim();
+        const resultsDiv = document.getElementById('autocomplete-results');
+        
+        // Réinitialiser la sélection
+        selectedUser = null;
+        
+        // Annuler la recherche précédente si elle existe
+        if (searchTimeout) {
+            clearTimeout(searchTimeout);
+        }
+        
+        // Si le champ est vide ou trop court, cacher les résultats
+        if (query.length < 2) {
+            resultsDiv.classList.add('hidden');
+            return;
+        }
+        
+        // Délai pour éviter trop de requêtes
+        searchTimeout = setTimeout(async () => {
         try {
             const response = await fetch(`/api/moderation/search-users?q=${encodeURIComponent(query)}`);
             const data = await response.json();
@@ -167,12 +402,28 @@ document.getElementById('username').addEventListener('input', function(e) {
                 resultsDiv.querySelectorAll('.autocomplete-item').forEach(item => {
                     item.addEventListener('click', function() {
                         const username = this.getAttribute('data-username');
-                        document.getElementById('username').value = username;
+                        const userId = this.getAttribute('data-user-id');
+                        // document.getElementById('username').value = username; // Élément supprimé
                         selectedUser = {
                             username: username,
-                            id: this.getAttribute('data-user-id')
+                            id: userId
                         };
                         resultsDiv.classList.add('hidden');
+                        
+                        // Effacer les warns précédents avant de charger les nouveaux
+                        const userWarnsSection = document.getElementById('user-warns-section');
+                        const userWarnsContainer = document.getElementById('user-warns-container');
+                        if (userWarnsSection) {
+                            userWarnsSection.classList.add('hidden');
+                        }
+                        if (userWarnsContainer) {
+                            setSafeHTML(userWarnsContainer, '<div class="text-center py-4 text-gray-500 dark:text-gray-400">Chargement...</div>');
+                        }
+                        
+                        // Charger les warns de l'utilisateur sélectionné
+                        if (userId) {
+                            loadUserWarns(userId); // Garder comme string
+                        }
                     });
                 });
                 
@@ -184,60 +435,13 @@ document.getElementById('username').addEventListener('input', function(e) {
             console.error('Erreur lors de la recherche:', error);
             resultsDiv.classList.add('hidden');
         }
-    }, 300); // Délai de 300ms
-});
+        }, 300); // Délai de 300ms
+    });
+}
+*/
 
-// Cacher les résultats quand on clique en dehors
-document.addEventListener('click', function(e) {
-    const usernameInput = document.getElementById('username');
-    const resultsDiv = document.getElementById('autocomplete-results');
-    
-    if (!usernameInput.contains(e.target) && !resultsDiv.contains(e.target)) {
-        resultsDiv.classList.add('hidden');
-    }
-});
-
-// Gérer les touches clavier dans l'autocomplétion
-document.getElementById('username').addEventListener('keydown', function(e) {
-    const resultsDiv = document.getElementById('autocomplete-results');
-    const items = resultsDiv.querySelectorAll('.autocomplete-item');
-    
-    if (!resultsDiv.classList.contains('hidden') && items.length > 0) {
-        const currentItem = resultsDiv.querySelector('.autocomplete-item.highlighted');
-        
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            if (currentItem) {
-                currentItem.classList.remove('highlighted', 'bg-gray-100', 'dark:bg-gray-700');
-                const next = currentItem.nextElementSibling;
-                if (next) {
-                    next.classList.add('highlighted', 'bg-gray-100', 'dark:bg-gray-700');
-                } else {
-                    items[0].classList.add('highlighted', 'bg-gray-100', 'dark:bg-gray-700');
-                }
-            } else {
-                items[0].classList.add('highlighted', 'bg-gray-100', 'dark:bg-gray-700');
-            }
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            if (currentItem) {
-                currentItem.classList.remove('highlighted', 'bg-gray-100', 'dark:bg-gray-700');
-                const prev = currentItem.previousElementSibling;
-                if (prev) {
-                    prev.classList.add('highlighted', 'bg-gray-100', 'dark:bg-gray-700');
-                } else {
-                    items[items.length - 1].classList.add('highlighted', 'bg-gray-100', 'dark:bg-gray-700');
-                }
-            } else {
-                items[items.length - 1].classList.add('highlighted', 'bg-gray-100', 'dark:bg-gray-700');
-            }
-        } else if (e.key === 'Enter' && currentItem) {
-            e.preventDefault();
-            currentItem.click();
-        }
-    }
-});
-
+// Formulaire d'avertissement - CODE OBSOLÈTE (remplacé par les actions rapides)
+/*
 document.getElementById('warn-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     
@@ -294,6 +498,12 @@ document.getElementById('warn-form').addEventListener('submit', async function(e
         } else {
             const warnCount = data.warn_count || 0;
             showSuccess(`Avertissement donné avec succès ! L'utilisateur a maintenant ${warnCount} avertissement(s).`);
+            
+            // Recharger les warns si un utilisateur est sélectionné
+            if (selectedUser && selectedUser.id) {
+                loadUserWarns(selectedUser.id); // Garder comme string
+            }
+            
             // Réinitialiser le formulaire après 3 secondes
             setTimeout(() => {
                 resetForm();
@@ -308,7 +518,1574 @@ document.getElementById('warn-form').addEventListener('submit', async function(e
         submitText.classList.remove('hidden');
         submitLoading.classList.add('hidden');
     }
+    });
+}
+*/
+
+// Fonction pour charger les warns d'un utilisateur
+async function loadUserWarns(userId) {
+    const warnsSection = document.getElementById('user-warns-section');
+    const warnsContainer = document.getElementById('user-warns-container');
+    
+    if (!warnsSection || !warnsContainer) {
+        return;
+    }
+    
+    // Effacer le contenu précédent et afficher le chargement
+    setSafeHTML(warnsContainer, '<div class="text-center py-4 text-gray-500 dark:text-gray-400">Chargement...</div>');
+    
+    // Afficher la section
+    warnsSection.classList.remove('hidden');
+    
+    // S'assurer que userId est une string pour éviter les problèmes de précision
+    const userIdStr = String(userId);
+    
+    try {
+        const response = await fetch(`/api/moderation/warns/${userIdStr}`);
+        const data = await response.json();
+        
+        if (!data.warns || data.warns.length === 0) {
+            setSafeHTML(warnsContainer, `
+                <div class="p-6 text-center">
+                    <svg class="w-12 h-12 text-green-500 dark:text-green-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <p class="text-base font-semibold text-green-800 dark:text-green-300 mb-1">Aucun avertissement</p>
+                </div>
+            `);
+            document.getElementById('user-warns-bulk-actions')?.classList.add('hidden');
+        } else {
+            // Afficher les actions groupées
+            const bulkActions = document.getElementById('user-warns-bulk-actions');
+            if (bulkActions) {
+                bulkActions.classList.remove('hidden');
+            }
+            
+            // Créer le tableau
+            const tableHeader = `
+                <div class="grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                    <div class="col-span-1 text-center flex items-center justify-center">
+                        <label class="flex items-center justify-center cursor-pointer p-1">
+                            <input type="checkbox" id="user-select-all-checkbox" class="w-5 h-5 text-indigo-600 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-600 focus:ring-offset-0 cursor-pointer transition-all" title="Sélectionner tout">
+                        </label>
+                    </div>
+                    <div class="col-span-1 text-center">#</div>
+                    <div class="col-span-5">Raison</div>
+                    <div class="col-span-3">Date</div>
+                    <div class="col-span-2 text-center">Actions</div>
+                </div>
+            `;
+            
+                const warnsRows = data.warns.map((warn, index) => {
+                const date = new Date(warn.create_time * 1000);
+                const dateStr = date.toLocaleDateString('fr-FR', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                const timeStr = date.toLocaleTimeString('fr-FR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                const reason = escapeHTML(warn.reason || 'Aucune raison spécifiée');
+                
+                // Numéro séquentiel basé sur la position dans la liste (1, 2, 3...)
+                // Les warns sont triés du plus récent au plus vieux, donc index 0 = warn #1
+                const warnNumber = index + 1;
+                
+                const isEven = index % 2 === 0;
+                const bgClass = isEven ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-800/50';
+                const hoverClass = 'hover:bg-orange-50 dark:hover:bg-orange-900/10 transition-all duration-150';
+                
+                return `
+                    <div class="warn-row grid grid-cols-12 gap-4 px-4 py-3 ${bgClass} ${hoverClass} border-b border-gray-100 dark:border-gray-700/50 border-l-4 border-l-transparent" data-warn-id="${warn.id}">
+                        <div class="col-span-1 flex items-center justify-center">
+                            <label class="flex items-center justify-center cursor-pointer p-1 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded transition-colors">
+                                <input type="checkbox" class="user-warn-checkbox w-5 h-5 text-indigo-600 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-600 focus:ring-offset-0 cursor-pointer transition-all" data-warn-id="${warn.id}" title="Sélectionner cet avertissement">
+                            </label>
+                        </div>
+                        <div class="col-span-1 flex items-center justify-center">
+                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-semibold bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
+                                ${warnNumber}
+                            </span>
+                        </div>
+                        <div class="col-span-5 flex items-center">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <svg class="w-4 h-4 text-orange-500 dark:text-orange-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                </svg>
+                                <span class="text-sm text-gray-900 dark:text-white truncate" title="${reason}">${reason}</span>
+                            </div>
+                        </div>
+                        <div class="col-span-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <span class="whitespace-nowrap">${dateStr}</span>
+                            <span class="text-gray-400 dark:text-gray-600">•</span>
+                            <span class="whitespace-nowrap">${timeStr}</span>
+                        </div>
+                        <div class="col-span-2 flex items-center justify-end gap-1">
+                            <button class="edit-user-warn-btn px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-md transition-colors duration-150"
+                                    data-warn-id="${warn.id}"
+                                    data-reason="${escapeHTML(warn.reason || '')}"
+                                    data-user-id="${userIdStr}"
+                                    title="Modifier la raison">
+                                ✏️
+                            </button>
+                            <button class="delete-warn-btn px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 rounded-md transition-colors duration-150"
+                                    data-warn-id="${warn.id}"
+                                    data-user-id="${userIdStr}"
+                                    title="Supprimer cet avertissement">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            setSafeHTML(warnsContainer, tableHeader + warnsRows);
+            
+            // Initialiser les event listeners pour les cases à cocher
+            setupUserWarnsSelection();
+            
+            // Mettre à jour l'affichage visuel initial
+            updateUserWarnsVisualSelection();
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement des warns:', error);
+        setSafeHTML(warnsContainer, `
+            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 text-center">
+                <p class="text-red-800 dark:text-red-300">Erreur lors du chargement des avertissements</p>
+            </div>
+        `);
+    }
+}
+
+// Section pour consulter les warns (administrateurs uniquement)
+{% if can_create_articles %}
+let viewWarnsSearchTimeout = null;
+let viewWarnsSelectedUser = null;
+
+// Autocomplétion pour la recherche de warns
+const viewWarnsInput = document.getElementById('view-warns-username');
+if (viewWarnsInput) {
+    viewWarnsInput.addEventListener('input', function(e) {
+        const query = e.target.value.trim();
+        const resultsDiv = document.getElementById('view-warns-autocomplete-results');
+        
+        // Réinitialiser la sélection
+        viewWarnsSelectedUser = null;
+        document.getElementById('view-warns-section').classList.add('hidden');
+        
+        // Annuler la recherche précédente si elle existe
+        if (viewWarnsSearchTimeout) {
+            clearTimeout(viewWarnsSearchTimeout);
+        }
+        
+        // Si le champ est vide ou trop court, cacher les résultats
+        if (query.length < 2) {
+            resultsDiv.classList.add('hidden');
+            return;
+        }
+        
+        // Délai pour éviter trop de requêtes
+        viewWarnsSearchTimeout = setTimeout(async () => {
+            try {
+                const response = await fetch(`/api/moderation/search-users?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                if (data.users && data.users.length > 0) {
+                    const html = data.users.map(user => {
+                        const displayName = escapeHTML(user.display_name || '');
+                        const username = escapeHTML(user.username || '');
+                        const avatarUrl = escapeHTML(user.avatar_url || 'https://cdn.discordapp.com/embed/avatars/0.png');
+                        const nickname = user.nickname ? `<div class="text-xs text-gray-500 dark:text-gray-400 truncate">@${escapeHTML(user.username || '')}</div>` : '';
+                        
+                        return `<div class="autocomplete-item px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0" 
+                             data-username="${escapeHTML(user.username || '')}" 
+                             data-user-id="${escapeHTML(String(user.id || ''))}">
+                            <img src="${avatarUrl}" 
+                                 alt="${displayName}" 
+                                 class="w-8 h-8 rounded-full flex-shrink-0"
+                                 onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                            <div class="flex-1 min-w-0">
+                                <div class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                    ${displayName}
+                                </div>
+                                ${nickname}
+                            </div>
+                        </div>`;
+                    }).join('');
+                    setSafeHTML(resultsDiv, html);
+                    
+                    // Ajouter les event listeners aux items
+                    resultsDiv.querySelectorAll('.autocomplete-item').forEach(item => {
+                        item.addEventListener('click', function() {
+                            const username = this.getAttribute('data-username');
+                            const userId = this.getAttribute('data-user-id');
+                            viewWarnsInput.value = username;
+                            viewWarnsSelectedUser = {
+                                username: username,
+                                id: userId
+                            };
+                            resultsDiv.classList.add('hidden');
+                            
+                            // Effacer les warns précédents avant de charger les nouveaux
+                            const viewWarnsSection = document.getElementById('view-warns-section');
+                            const viewWarnsContainer = document.getElementById('view-warns-container');
+                            const viewWarnsCountEl = document.getElementById('view-warns-count');
+                            const viewWarnsUsernameDisplay = document.getElementById('view-warns-username-display');
+                            
+                            if (viewWarnsSection) {
+                                viewWarnsSection.classList.add('hidden');
+                            }
+                            if (viewWarnsContainer) {
+                                setSafeHTML(viewWarnsContainer, '<div class="text-center py-4 text-gray-500 dark:text-gray-400">Chargement...</div>');
+                            }
+                            if (viewWarnsCountEl) {
+                                viewWarnsCountEl.textContent = '-';
+                            }
+                            if (viewWarnsUsernameDisplay) {
+                                viewWarnsUsernameDisplay.textContent = '';
+                            }
+                            
+                            // Charger les warns de l'utilisateur sélectionné
+                            if (userId) {
+                                loadViewWarns(userId, username);
+                            }
+                        });
+                    });
+                    
+                    resultsDiv.classList.remove('hidden');
+                } else {
+                    resultsDiv.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Erreur lors de la recherche:', error);
+                resultsDiv.classList.add('hidden');
+            }
+        }, 300); // Délai de 300ms
+    });
+}
+
+// Cacher les résultats quand on clique en dehors
+document.addEventListener('click', function(e) {
+    const viewWarnsInputEl = document.getElementById('view-warns-username');
+    const viewWarnsResultsDiv = document.getElementById('view-warns-autocomplete-results');
+    
+    if (viewWarnsInputEl && viewWarnsResultsDiv && 
+        !viewWarnsInputEl.contains(e.target) && !viewWarnsResultsDiv.contains(e.target)) {
+        viewWarnsResultsDiv.classList.add('hidden');
+    }
 });
+
+// Fonction pour charger et afficher les warns dans la section de consultation
+async function loadViewWarns(userId, username) {
+    const viewWarnsSection = document.getElementById('view-warns-section');
+    const viewWarnsContainer = document.getElementById('view-warns-container');
+    const viewWarnsCountEl = document.getElementById('view-warns-count');
+    const viewWarnsUsernameDisplay = document.getElementById('view-warns-username-display');
+    
+    if (!viewWarnsSection || !viewWarnsContainer) {
+        return;
+    }
+    
+    // Effacer le contenu précédent et afficher le chargement
+    setSafeHTML(viewWarnsContainer, '<div class="text-center py-4 text-gray-500 dark:text-gray-400">Chargement...</div>');
+    if (viewWarnsCountEl) {
+        viewWarnsCountEl.textContent = '-';
+    }
+    if (viewWarnsUsernameDisplay) {
+        viewWarnsUsernameDisplay.textContent = escapeHTML(username || 'Inconnu');
+    }
+    
+    // Afficher la section
+    viewWarnsSection.classList.remove('hidden');
+    
+    // S'assurer que userId est une string pour éviter les problèmes de précision
+    const userIdStr = String(userId);
+    
+    try {
+        const response = await fetch(`/api/moderation/warns/${userIdStr}`);
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.detail || `Erreur HTTP: ${response.status}`);
+        }
+        
+        viewWarnsCountEl.textContent = data.warn_count || 0;
+        
+        if (!data.warns || data.warns.length === 0) {
+            setSafeHTML(viewWarnsContainer, `
+                <div class="p-6 text-center">
+                    <svg class="w-12 h-12 text-green-500 dark:text-green-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <p class="text-base font-semibold text-green-800 dark:text-green-300 mb-1">Aucun avertissement</p>
+                </div>
+            `);
+            document.getElementById('view-warns-bulk-actions')?.classList.add('hidden');
+        } else {
+            // Afficher les actions groupées
+            const bulkActions = document.getElementById('view-warns-bulk-actions');
+            if (bulkActions) {
+                bulkActions.classList.remove('hidden');
+            }
+            
+            // Créer le tableau
+            const tableHeader = `
+                <div class="grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                    <div class="col-span-1 text-center flex items-center justify-center">
+                        <label class="flex items-center justify-center cursor-pointer p-1">
+                            <input type="checkbox" id="view-select-all-checkbox" class="w-5 h-5 text-indigo-600 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-600 focus:ring-offset-0 cursor-pointer transition-all" title="Sélectionner tout">
+                        </label>
+                    </div>
+                    <div class="col-span-1 text-center">#</div>
+                    <div class="col-span-5">Raison</div>
+                    <div class="col-span-3">Date</div>
+                    <div class="col-span-2 text-center">Actions</div>
+                </div>
+            `;
+            
+                const warnsRows = data.warns.map((warn, index) => {
+                const date = new Date(warn.create_time * 1000);
+                const dateStr = date.toLocaleDateString('fr-FR', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                const timeStr = date.toLocaleTimeString('fr-FR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                const reason = escapeHTML(warn.reason || 'Aucune raison spécifiée');
+                
+                // Numéro séquentiel basé sur la position dans la liste (1, 2, 3...)
+                // Les warns sont triés du plus récent au plus vieux, donc index 0 = warn #1
+                const warnNumber = index + 1;
+                
+                const isEven = index % 2 === 0;
+                const bgClass = isEven ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-800/50';
+                const hoverClass = 'hover:bg-orange-50 dark:hover:bg-orange-900/10 transition-all duration-150';
+                
+                return `
+                    <div class="warn-row grid grid-cols-12 gap-4 px-4 py-3 ${bgClass} ${hoverClass} border-b border-gray-100 dark:border-gray-700/50 border-l-4 border-l-transparent" data-warn-id="${warn.id}">
+                        <div class="col-span-1 flex items-center justify-center">
+                            <label class="flex items-center justify-center cursor-pointer p-1 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded transition-colors">
+                                <input type="checkbox" class="view-warn-checkbox w-5 h-5 text-indigo-600 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-600 focus:ring-offset-0 cursor-pointer transition-all" data-warn-id="${warn.id}" title="Sélectionner cet avertissement">
+                            </label>
+                        </div>
+                        <div class="col-span-1 flex items-center justify-center">
+                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-semibold bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
+                                ${warnNumber}
+                            </span>
+                        </div>
+                        <div class="col-span-5 flex items-center">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <svg class="w-4 h-4 text-orange-500 dark:text-orange-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                </svg>
+                                <span class="text-sm text-gray-900 dark:text-white truncate" title="${reason}">${reason}</span>
+                            </div>
+                        </div>
+                        <div class="col-span-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <span class="whitespace-nowrap">${dateStr}</span>
+                            <span class="text-gray-400 dark:text-gray-600">•</span>
+                            <span class="whitespace-nowrap">${timeStr}</span>
+                        </div>
+                        <div class="col-span-2 flex items-center justify-end gap-1">
+                            <button class="edit-view-warn-btn px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-md transition-colors duration-150"
+                                    data-warn-id="${warn.id}"
+                                    data-reason="${escapeHTML(warn.reason || '')}"
+                                    data-user-id="${userIdStr}"
+                                    data-username="${escapeHTML(username || '')}"
+                                    title="Modifier la raison">
+                                ✏️
+                            </button>
+                            <button class="delete-view-warn-btn px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 rounded-md transition-colors duration-150"
+                                    data-warn-id="${warn.id}"
+                                    data-user-id="${userIdStr}"
+                                    data-username="${escapeHTML(username || '')}"
+                                    title="Supprimer cet avertissement">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            setSafeHTML(viewWarnsContainer, tableHeader + warnsRows);
+            
+            // Initialiser les event listeners pour les cases à cocher
+            setupViewWarnsSelection();
+            
+            // Mettre à jour l'affichage visuel initial
+            updateViewWarnsVisualSelection();
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement des warns:', error);
+        setSafeHTML(viewWarnsContainer, `
+            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 text-center">
+                <p class="text-red-800 dark:text-red-300">Erreur lors du chargement des avertissements</p>
+                <p class="text-xs text-red-600 dark:text-red-400 mt-2">${escapeHTML(error.message || 'Erreur inconnue')}</p>
+            </div>
+        `);
+        viewWarnsCountEl.textContent = '?';
+    }
+}
+
+// Fonctions pour les modales
+function showConfirmModal(title, message, onConfirm) {
+    const modal = document.getElementById('confirm-modal');
+    const titleEl = document.getElementById('confirm-title');
+    const messageEl = document.getElementById('confirm-message');
+    const cancelBtn = document.getElementById('confirm-cancel');
+    const okBtn = document.getElementById('confirm-ok');
+    
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    modal.classList.remove('hidden');
+    
+    // Nettoyer les anciens event listeners
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    const newOkBtn = okBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+    okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+    
+    newCancelBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+    });
+    
+    newOkBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+        if (onConfirm) onConfirm();
+    });
+    
+    // Fermer en cliquant en dehors
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+        }
+    });
+}
+
+function showMessageModal(type, title, message) {
+    const modal = document.getElementById('message-modal');
+    const titleEl = document.getElementById('message-title');
+    const textEl = document.getElementById('message-text');
+    const iconEl = document.getElementById('message-icon');
+    const closeBtn = document.getElementById('message-close');
+    
+    titleEl.textContent = title;
+    textEl.textContent = message;
+    
+    // Définir l'icône et les couleurs selon le type
+    if (type === 'success') {
+        titleEl.className = 'text-lg font-semibold mb-2 text-green-800 dark:text-green-300';
+        textEl.className = 'text-sm text-green-700 dark:text-green-400';
+        iconEl.innerHTML = '<svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+    } else if (type === 'error') {
+        titleEl.className = 'text-lg font-semibold mb-2 text-red-800 dark:text-red-300';
+        textEl.className = 'text-sm text-red-700 dark:text-red-400';
+        iconEl.innerHTML = '<svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+    } else {
+        titleEl.className = 'text-lg font-semibold mb-2 text-gray-900 dark:text-white';
+        textEl.className = 'text-sm text-gray-700 dark:text-gray-300';
+        iconEl.innerHTML = '<svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+    }
+    
+    modal.classList.remove('hidden');
+    
+    // Nettoyer les anciens event listeners
+    const newCloseBtn = closeBtn.cloneNode(true);
+    closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+    
+    newCloseBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+    });
+    
+    // Fermer en cliquant en dehors
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+        }
+    });
+}
+
+// Fonction pour supprimer un warn (formulaire d'avertissement)
+async function deleteWarn(warnId, userId) {
+    showConfirmModal(
+        'Supprimer l\'avertissement',
+        `Êtes-vous sûr de vouloir supprimer l'avertissement #${warnId} ?`,
+        async () => {
+            try {
+                const response = await fetch(`/api/moderation/delete-warn/${warnId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    const errorMessage = data.detail || data.message || "Une erreur est survenue";
+                    showMessageModal('error', 'Erreur', errorMessage);
+                    return;
+                }
+                
+                // Recharger les warns de l'utilisateur immédiatement
+                if (userId) {
+                    // Forcer le rechargement en réappelant la fonction
+                    setTimeout(async () => {
+                        await loadUserWarns(userId);
+                    }, 100);
+                }
+                
+                // Afficher un message de succès
+                showMessageModal('success', 'Succès', `Avertissement #${warnId} supprimé avec succès !`);
+            } catch (error) {
+                console.error('Erreur lors de la suppression:', error);
+                showMessageModal('error', 'Erreur', "Erreur de connexion. Vérifiez que le bot Hermes est en ligne.");
+            }
+        }
+    );
+}
+
+// Fonction pour supprimer un warn (section de consultation)
+async function deleteViewWarn(warnId, userId, username) {
+    showConfirmModal(
+        'Supprimer l\'avertissement',
+        `Êtes-vous sûr de vouloir supprimer l'avertissement #${warnId} ?`,
+        async () => {
+            try {
+                const response = await fetch(`/api/moderation/delete-warn/${warnId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    const errorMessage = data.detail || data.message || "Une erreur est survenue";
+                    showMessageModal('error', 'Erreur', errorMessage);
+                    return;
+                }
+                
+                // Mettre à jour le compteur immédiatement
+                const viewWarnsCountEl = document.getElementById('view-warns-count');
+                if (viewWarnsCountEl && data.warn_count !== undefined) {
+                    viewWarnsCountEl.textContent = data.warn_count;
+                }
+                
+                // Recharger les warns de l'utilisateur
+                if (userId && username) {
+                    // Forcer le rechargement en réappelant la fonction
+                    setTimeout(async () => {
+                        await loadViewWarns(userId, username);
+                    }, 100);
+                }
+                
+                // Afficher un message de succès
+                showMessageModal('success', 'Succès', `Avertissement #${warnId} supprimé avec succès !`);
+            } catch (error) {
+                console.error('Erreur lors de la suppression:', error);
+                showMessageModal('error', 'Erreur', "Erreur de connexion. Vérifiez que le bot Hermes est en ligne.");
+            }
+        }
+    );
+}
+
+// Fonction pour initialiser la sélection multiple (section formulaire)
+function setupUserWarnsSelection() {
+    const selectAllBtn = document.getElementById('user-select-all-warns');
+    const deselectAllBtn = document.getElementById('user-deselect-all-warns');
+    const deleteSelectedBtn = document.getElementById('user-delete-selected-warns');
+    const selectAllCheckbox = document.getElementById('user-select-all-checkbox');
+    
+    // Sélectionner tout
+    if (selectAllBtn) {
+        selectAllBtn.onclick = () => {
+            document.querySelectorAll('.user-warn-checkbox').forEach(cb => {
+                cb.checked = true;
+            });
+            if (selectAllCheckbox) selectAllCheckbox.checked = true;
+            updateUserSelectedCount();
+            updateUserWarnsVisualSelection();
+        };
+    }
+    
+    // Désélectionner tout
+    if (deselectAllBtn) {
+        deselectAllBtn.onclick = () => {
+            document.querySelectorAll('.user-warn-checkbox').forEach(cb => {
+                cb.checked = false;
+            });
+            if (selectAllCheckbox) selectAllCheckbox.checked = false;
+            updateUserSelectedCount();
+            updateUserWarnsVisualSelection();
+        };
+    }
+    
+    // Case à cocher "Sélectionner tout"
+    if (selectAllCheckbox) {
+        selectAllCheckbox.onchange = function() {
+            document.querySelectorAll('.user-warn-checkbox').forEach(cb => {
+                cb.checked = this.checked;
+            });
+            updateUserSelectedCount();
+            updateUserWarnsVisualSelection();
+        };
+    }
+    
+    // Mettre à jour le compteur et l'affichage visuel quand une case est cochée/décochée
+    document.querySelectorAll('.user-warn-checkbox').forEach(cb => {
+        cb.onchange = () => {
+            updateUserSelectedCount();
+            updateUserWarnsVisualSelection();
+            const allChecked = Array.from(document.querySelectorAll('.user-warn-checkbox')).every(c => c.checked);
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = allChecked;
+            }
+        };
+    });
+    
+    // Édition de masse
+    const editSelectedBtn = document.getElementById('user-edit-selected-warns');
+    if (editSelectedBtn) {
+        editSelectedBtn.onclick = () => {
+            const selectedWarns = Array.from(document.querySelectorAll('.user-warn-checkbox:checked'))
+                .map(cb => parseInt(cb.getAttribute('data-warn-id')))
+                .filter(id => !isNaN(id));
+            
+            if (selectedWarns.length === 0) {
+                showMessageModal('error', 'Erreur', 'Aucun avertissement sélectionné');
+                return;
+            }
+            
+            showBulkEditReasonModal(selectedWarns, false);
+        };
+    }
+    
+    // Supprimer les warns sélectionnés
+    if (deleteSelectedBtn) {
+        deleteSelectedBtn.onclick = async () => {
+            const selectedWarns = Array.from(document.querySelectorAll('.user-warn-checkbox:checked'))
+                .map(cb => parseInt(cb.getAttribute('data-warn-id')))
+                .filter(id => !isNaN(id));
+            
+            if (selectedWarns.length === 0) {
+                showMessageModal('error', 'Erreur', 'Aucun avertissement sélectionné');
+                return;
+            }
+            
+            showConfirmModal(
+                'Supprimer les avertissements sélectionnés',
+                `Êtes-vous sûr de vouloir supprimer ${selectedWarns.length} avertissement(s) ?`,
+                async () => {
+                    try {
+                        const response = await fetch('/api/moderation/bulk-delete-warns', {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                warn_ids: selectedWarns
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (!response.ok) {
+                            const errorMessage = data.detail || data.message || "Une erreur est survenue";
+                            showMessageModal('error', 'Erreur', errorMessage);
+                            return;
+                        }
+                        
+                        // Recharger les warns
+                        if (selectedModerationUser && selectedModerationUser.id) {
+                            await loadUserWarns(selectedModerationUser.id);
+                        } else {
+                            // Si selectedModerationUser n'est pas défini, essayer de récupérer l'ID depuis l'interface
+                            const userIdEl = document.getElementById('selected-user-id');
+                            if (userIdEl) {
+                                const userIdText = userIdEl.textContent;
+                                const userIdMatch = userIdText.match(/ID:\s*(\d+)/);
+                                if (userIdMatch) {
+                                    await loadUserWarns(userIdMatch[1]);
+                                }
+                            }
+                        }
+                        
+                        showMessageModal('success', 'Succès', `${selectedWarns.length} avertissement(s) supprimé(s) avec succès !`);
+                    } catch (error) {
+                        console.error('Erreur lors de la suppression:', error);
+                        showMessageModal('error', 'Erreur', "Erreur de connexion. Vérifiez que le bot Hermes est en ligne.");
+                    }
+                }
+            );
+        };
+    }
+}
+
+// Fonction pour mettre à jour le compteur de sélection (section formulaire)
+function updateUserSelectedCount() {
+    const selectedCount = document.querySelectorAll('.user-warn-checkbox:checked').length;
+    const countSpan = document.getElementById('user-selected-count');
+    if (countSpan) {
+        countSpan.textContent = selectedCount;
+    }
+    const deleteSelectedBtn = document.getElementById('user-delete-selected-warns');
+    const editSelectedBtn = document.getElementById('user-edit-selected-warns');
+    if (deleteSelectedBtn) {
+        deleteSelectedBtn.disabled = selectedCount === 0;
+    }
+    if (editSelectedBtn) {
+        editSelectedBtn.disabled = selectedCount === 0;
+    }
+}
+
+// Fonction pour mettre à jour l'affichage visuel des warns sélectionnés (section formulaire)
+function updateUserWarnsVisualSelection() {
+    document.querySelectorAll('.warn-row[data-warn-id]').forEach(row => {
+        const warnId = parseInt(row.getAttribute('data-warn-id'));
+        const checkbox = row.querySelector(`.user-warn-checkbox[data-warn-id="${warnId}"]`);
+        
+        if (checkbox && checkbox.checked) {
+            // Warn sélectionné : bordure gauche indigo et fond légèrement coloré
+            row.classList.remove('border-l-transparent');
+            row.classList.add('border-l-indigo-500', 'bg-indigo-50', 'dark:bg-indigo-900/20');
+        } else {
+            // Warn non sélectionné : bordure transparente et fond normal
+            row.classList.remove('border-l-indigo-500', 'bg-indigo-50', 'dark:bg-indigo-900/20');
+            row.classList.add('border-l-transparent');
+            // Restaurer le fond alterné
+            const index = Array.from(row.parentElement.children).indexOf(row) - 1; // -1 car le header est le premier enfant
+            if (index >= 0) {
+                const isEven = index % 2 === 0;
+                if (isEven) {
+                    row.classList.remove('bg-gray-50', 'dark:bg-gray-800/50');
+                    row.classList.add('bg-white', 'dark:bg-gray-800');
+                } else {
+                    row.classList.remove('bg-white', 'dark:bg-gray-800');
+                    row.classList.add('bg-gray-50', 'dark:bg-gray-800/50');
+                }
+            }
+        }
+    });
+}
+
+// Fonction pour initialiser la sélection multiple (section consultation)
+function setupViewWarnsSelection() {
+    const selectAllBtn = document.getElementById('view-select-all-warns');
+    const deselectAllBtn = document.getElementById('view-deselect-all-warns');
+    const deleteSelectedBtn = document.getElementById('view-delete-selected-warns');
+    const selectAllCheckbox = document.getElementById('view-select-all-checkbox');
+    
+    // Sélectionner tout
+    if (selectAllBtn) {
+        selectAllBtn.onclick = () => {
+            document.querySelectorAll('.view-warn-checkbox').forEach(cb => {
+                cb.checked = true;
+            });
+            if (selectAllCheckbox) selectAllCheckbox.checked = true;
+            updateViewSelectedCount();
+            updateViewWarnsVisualSelection();
+        };
+    }
+    
+    // Désélectionner tout
+    if (deselectAllBtn) {
+        deselectAllBtn.onclick = () => {
+            document.querySelectorAll('.view-warn-checkbox').forEach(cb => {
+                cb.checked = false;
+            });
+            if (selectAllCheckbox) selectAllCheckbox.checked = false;
+            updateViewSelectedCount();
+            updateViewWarnsVisualSelection();
+        };
+    }
+    
+    // Case à cocher "Sélectionner tout"
+    if (selectAllCheckbox) {
+        selectAllCheckbox.onchange = function() {
+            document.querySelectorAll('.view-warn-checkbox').forEach(cb => {
+                cb.checked = this.checked;
+            });
+            updateViewSelectedCount();
+            updateViewWarnsVisualSelection();
+        };
+    }
+    
+    // Mettre à jour le compteur et l'affichage visuel quand une case est cochée/décochée
+    document.querySelectorAll('.view-warn-checkbox').forEach(cb => {
+        cb.onchange = () => {
+            updateViewSelectedCount();
+            updateViewWarnsVisualSelection();
+            const allChecked = Array.from(document.querySelectorAll('.view-warn-checkbox')).every(c => c.checked);
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = allChecked;
+            }
+        };
+    });
+    
+    // Édition de masse
+    const editSelectedBtn = document.getElementById('view-edit-selected-warns');
+    if (editSelectedBtn) {
+        editSelectedBtn.onclick = () => {
+            const selectedWarns = Array.from(document.querySelectorAll('.view-warn-checkbox:checked'))
+                .map(cb => parseInt(cb.getAttribute('data-warn-id')))
+                .filter(id => !isNaN(id));
+            
+            if (selectedWarns.length === 0) {
+                showMessageModal('error', 'Erreur', 'Aucun avertissement sélectionné');
+                return;
+            }
+            
+            showBulkEditReasonModal(selectedWarns, true);
+        };
+    }
+    
+    // Supprimer les warns sélectionnés
+    if (deleteSelectedBtn) {
+        deleteSelectedBtn.onclick = async () => {
+            const selectedWarns = Array.from(document.querySelectorAll('.view-warn-checkbox:checked'))
+                .map(cb => parseInt(cb.getAttribute('data-warn-id')))
+                .filter(id => !isNaN(id));
+            
+            if (selectedWarns.length === 0) {
+                showMessageModal('error', 'Erreur', 'Aucun avertissement sélectionné');
+                return;
+            }
+            
+            const username = document.getElementById('view-warns-username-display')?.textContent || '';
+            const userId = viewWarnsSelectedUser?.id || '';
+            
+            showConfirmModal(
+                'Supprimer les avertissements sélectionnés',
+                `Êtes-vous sûr de vouloir supprimer ${selectedWarns.length} avertissement(s) ?`,
+                async () => {
+                    try {
+                        const response = await fetch('/api/moderation/bulk-delete-warns', {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                warn_ids: selectedWarns
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (!response.ok) {
+                            const errorMessage = data.detail || data.message || "Une erreur est survenue";
+                            showMessageModal('error', 'Erreur', errorMessage);
+                            return;
+                        }
+                        
+                        // Recharger les warns
+                        if (userId && username) {
+                            await loadViewWarns(userId, username);
+                        }
+                        
+                        showMessageModal('success', 'Succès', `${selectedWarns.length} avertissement(s) supprimé(s) avec succès !`);
+                    } catch (error) {
+                        console.error('Erreur lors de la suppression:', error);
+                        showMessageModal('error', 'Erreur', "Erreur de connexion. Vérifiez que le bot Hermes est en ligne.");
+                    }
+                }
+            );
+        };
+    }
+}
+
+// Fonction pour mettre à jour le compteur de sélection (section consultation)
+function updateViewSelectedCount() {
+    const selectedCount = document.querySelectorAll('.view-warn-checkbox:checked').length;
+    const countSpan = document.getElementById('view-selected-count');
+    if (countSpan) {
+        countSpan.textContent = selectedCount;
+    }
+    const deleteSelectedBtn = document.getElementById('view-delete-selected-warns');
+    const editSelectedBtn = document.getElementById('view-edit-selected-warns');
+    if (deleteSelectedBtn) {
+        deleteSelectedBtn.disabled = selectedCount === 0;
+    }
+    if (editSelectedBtn) {
+        editSelectedBtn.disabled = selectedCount === 0;
+    }
+}
+
+// Fonction pour mettre à jour l'affichage visuel des warns sélectionnés (section consultation)
+function updateViewWarnsVisualSelection() {
+    document.querySelectorAll('.warn-row[data-warn-id]').forEach(row => {
+        const warnId = parseInt(row.getAttribute('data-warn-id'));
+        const checkbox = row.querySelector(`.view-warn-checkbox[data-warn-id="${warnId}"]`);
+        
+        if (checkbox && checkbox.checked) {
+            // Warn sélectionné : bordure gauche indigo et fond légèrement coloré
+            row.classList.remove('border-l-transparent');
+            row.classList.add('border-l-indigo-500', 'bg-indigo-50', 'dark:bg-indigo-900/20');
+        } else {
+            // Warn non sélectionné : bordure transparente et fond normal
+            row.classList.remove('border-l-indigo-500', 'bg-indigo-50', 'dark:bg-indigo-900/20');
+            row.classList.add('border-l-transparent');
+            // Restaurer le fond alterné
+            const index = Array.from(row.parentElement.children).indexOf(row) - 1; // -1 car le header est le premier enfant
+            if (index >= 0) {
+                const isEven = index % 2 === 0;
+                if (isEven) {
+                    row.classList.remove('bg-gray-50', 'dark:bg-gray-800/50');
+                    row.classList.add('bg-white', 'dark:bg-gray-800');
+                } else {
+                    row.classList.remove('bg-white', 'dark:bg-gray-800');
+                    row.classList.add('bg-gray-50', 'dark:bg-gray-800/50');
+                }
+            }
+        }
+    });
+}
+
+// Fonction pour afficher le modal d'édition de masse
+function showBulkEditReasonModal(warnIds, isViewSection = false) {
+    const modal = document.getElementById('bulk-edit-reason-modal');
+    const countDisplay = document.getElementById('bulk-edit-count');
+    const reasonInput = document.getElementById('bulk-edit-reason-input');
+    const cancelBtn = document.getElementById('bulk-edit-reason-cancel');
+    const saveBtn = document.getElementById('bulk-edit-reason-save');
+    
+    if (!modal || !countDisplay || !reasonInput) return;
+    
+    countDisplay.textContent = warnIds.length;
+    reasonInput.value = '';
+    modal.classList.remove('hidden');
+    
+    // Nettoyer les anciens event listeners
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    const newSaveBtn = saveBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+    saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+    
+    newCancelBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+    });
+    
+    newSaveBtn.addEventListener('click', async () => {
+        const newReason = reasonInput.value.trim();
+        if (!newReason) {
+            showMessageModal('error', 'Erreur', 'La raison ne peut pas être vide');
+            return;
+        }
+        
+        try {
+            // Modifier chaque warn un par un
+            let successCount = 0;
+            let errorCount = 0;
+            
+            for (const warnId of warnIds) {
+                try {
+                    const response = await fetch(`/api/moderation/update-warn/${warnId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            reason: newReason
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        successCount++;
+                    } else {
+                        errorCount++;
+                    }
+                } catch (error) {
+                    console.error(`Erreur lors de la modification du warn ${warnId}:`, error);
+                    errorCount++;
+                }
+            }
+            
+            modal.classList.add('hidden');
+            
+            // Recharger les warns
+            if (isViewSection) {
+                const username = document.getElementById('view-warns-username-display')?.textContent || '';
+                const userId = viewWarnsSelectedUser?.id || '';
+                if (userId && username) {
+                    await loadViewWarns(userId, username);
+                }
+            } else {
+                if (selectedUser && selectedUser.id) {
+                    await loadUserWarns(selectedUser.id);
+                }
+            }
+            
+            if (errorCount === 0) {
+                showMessageModal('success', 'Succès', `${successCount} avertissement(s) modifié(s) avec succès !`);
+            } else {
+                showMessageModal('error', 'Erreur partielle', `${successCount} avertissement(s) modifié(s), ${errorCount} erreur(s).`);
+            }
+        } catch (error) {
+            console.error('Erreur lors de l\'édition de masse:', error);
+            showMessageModal('error', 'Erreur', "Erreur de connexion. Vérifiez que le bot Hermes est en ligne.");
+        }
+    });
+    
+    // Fermer en cliquant en dehors
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+        }
+    });
+}
+
+// Fonction pour afficher le modal d'édition de raison (individuelle)
+function showEditReasonModal(warnId, currentReason, userId, username, isViewSection = false) {
+    const modal = document.getElementById('edit-reason-modal');
+    const warnIdDisplay = document.getElementById('edit-warn-id-display');
+    const reasonInput = document.getElementById('edit-reason-input');
+    const cancelBtn = document.getElementById('edit-reason-cancel');
+    const saveBtn = document.getElementById('edit-reason-save');
+    
+    if (!modal || !warnIdDisplay || !reasonInput) return;
+    
+    warnIdDisplay.textContent = warnId;
+    reasonInput.value = currentReason;
+    modal.classList.remove('hidden');
+    
+    // Nettoyer les anciens event listeners
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    const newSaveBtn = saveBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+    saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+    
+    newCancelBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+    });
+    
+    newSaveBtn.addEventListener('click', async () => {
+        const newReason = reasonInput.value.trim();
+        if (!newReason) {
+            showMessageModal('error', 'Erreur', 'La raison ne peut pas être vide');
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/moderation/update-warn/${warnId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    reason: newReason
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                const errorMessage = data.detail || data.message || "Une erreur est survenue";
+                showMessageModal('error', 'Erreur', errorMessage);
+                return;
+            }
+            
+            modal.classList.add('hidden');
+            
+            // Recharger les warns
+            if (isViewSection && userId && username) {
+                await loadViewWarns(userId, username);
+            } else if (userId) {
+                await loadUserWarns(userId);
+            }
+            
+            showMessageModal('success', 'Succès', `Avertissement #${warnId} modifié avec succès !`);
+        } catch (error) {
+            console.error('Erreur lors de la modification:', error);
+            showMessageModal('error', 'Erreur', "Erreur de connexion. Vérifiez que le bot Hermes est en ligne.");
+        }
+    });
+    
+    // Fermer en cliquant en dehors
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+        }
+    });
+}
+
+// Délégation d'événements pour les boutons de suppression et d'édition
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.delete-warn-btn')) {
+        const btn = e.target.closest('.delete-warn-btn');
+        const warnId = parseInt(btn.getAttribute('data-warn-id'));
+        const userId = btn.getAttribute('data-user-id');
+        if (warnId && userId) {
+            deleteWarn(warnId, userId);
+        }
+    }
+    
+    // Délégation d'événements pour les boutons de suppression (section de consultation)
+    if (e.target.closest('.delete-view-warn-btn')) {
+        const btn = e.target.closest('.delete-view-warn-btn');
+        const warnId = parseInt(btn.getAttribute('data-warn-id'));
+        const userId = btn.getAttribute('data-user-id');
+        const username = btn.getAttribute('data-username');
+        if (warnId && userId && username) {
+            deleteViewWarn(warnId, userId, username);
+        }
+    }
+    
+    // Bouton d'édition (section formulaire)
+    if (e.target.closest('.edit-user-warn-btn')) {
+        const btn = e.target.closest('.edit-user-warn-btn');
+        const warnId = parseInt(btn.getAttribute('data-warn-id'));
+        const currentReason = btn.getAttribute('data-reason') || '';
+        const userId = btn.getAttribute('data-user-id');
+        if (warnId && userId) {
+            showEditReasonModal(warnId, currentReason, userId, null, false);
+        }
+    }
+    
+    // Bouton d'édition (section consultation)
+    if (e.target.closest('.edit-view-warn-btn')) {
+        const btn = e.target.closest('.edit-view-warn-btn');
+        const warnId = parseInt(btn.getAttribute('data-warn-id'));
+        const currentReason = btn.getAttribute('data-reason') || '';
+        const userId = btn.getAttribute('data-user-id');
+        const username = btn.getAttribute('data-username');
+        if (warnId && userId && username) {
+            showEditReasonModal(warnId, currentReason, userId, username, true);
+        }
+    }
+});
+
+// ==================== GESTION DES ACTIONS DE MODÉRATION ====================
+
+// Variable globale pour stocker l'utilisateur sélectionné pour les actions de modération
+let selectedModerationUser = null;
+
+// Autocomplétion pour la recherche d'utilisateur (section modération)
+let moderationSearchTimeout = null;
+
+// Initialiser l'autocomplétion pour la modération
+function initModerationAutocomplete() {
+    const moderationInput = document.getElementById('moderation-username');
+    const moderationAutocompleteResults = document.getElementById('moderation-autocomplete-results');
+    const selectedUserInfo = document.getElementById('selected-user-info');
+    
+    if (!moderationInput || !moderationAutocompleteResults) {
+        console.error('Éléments d\'autocomplétion non trouvés:', {
+            input: !!moderationInput,
+            results: !!moderationAutocompleteResults
+        });
+        return;
+    }
+    
+    console.log('Initialisation de l\'autocomplétion modération');
+    
+    moderationInput.addEventListener('input', function(e) {
+        const query = e.target.value.trim();
+        console.log('Input modération:', query);
+        
+        // Réinitialiser la sélection
+        selectedModerationUser = null;
+        if (selectedUserInfo) {
+            selectedUserInfo.classList.add('hidden');
+        }
+        
+        // Annuler la recherche précédente si elle existe
+        if (moderationSearchTimeout) {
+            clearTimeout(moderationSearchTimeout);
+        }
+        
+        if (query.length < 2) {
+            moderationAutocompleteResults.classList.add('hidden');
+            return;
+        }
+        
+        // Délai pour éviter trop de requêtes
+        moderationSearchTimeout = setTimeout(async () => {
+            try {
+                console.log('Recherche utilisateurs pour:', query);
+                const response = await fetch(`/api/moderation/search-users?q=${encodeURIComponent(query)}`);
+                console.log('Réponse reçue:', response.status);
+                const data = await response.json();
+                console.log('Données reçues:', data);
+                
+                if (data.users && data.users.length > 0) {
+                    console.log('Utilisateurs trouvés:', data.users.length);
+                    const html = data.users.map(user => {
+                        const displayName = escapeHTML(user.display_name || '');
+                        const username = escapeHTML(user.username || '');
+                        const avatarUrl = escapeHTML(user.avatar_url || 'https://cdn.discordapp.com/embed/avatars/0.png');
+                        
+                        return `<div class="moderation-autocomplete-item px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex items-center gap-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0" 
+                             data-username="${escapeHTML(user.username || '')}" 
+                             data-user-id="${escapeHTML(String(user.id || ''))}"
+                             data-display-name="${escapeHTML(user.display_name || '')}"
+                             data-avatar-url="${avatarUrl}">
+                            <img src="${avatarUrl}" 
+                                 alt="${displayName}" 
+                                 class="w-8 h-8 rounded-full flex-shrink-0"
+                                 onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                            <div class="flex-1 min-w-0">
+                                <div class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                    ${displayName}
+                                </div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                    @${username}
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                    setSafeHTML(moderationAutocompleteResults, html);
+                    moderationAutocompleteResults.classList.remove('hidden');
+                    console.log('Résultats affichés');
+                    
+                    // Ajouter les event listeners aux items
+                    moderationAutocompleteResults.querySelectorAll('.moderation-autocomplete-item').forEach(item => {
+                        item.addEventListener('click', function() {
+                            const username = this.getAttribute('data-username');
+                            const userId = this.getAttribute('data-user-id');
+                            const displayName = this.getAttribute('data-display-name');
+                            const avatarUrl = this.getAttribute('data-avatar-url');
+                            
+                            console.log('🔍 DEBUG: Utilisateur sélectionné:', {
+                                username: username,
+                                userId: userId,
+                                userIdType: typeof userId,
+                                displayName: displayName
+                            });
+                            
+                            selectedModerationUser = {
+                                username: username,
+                                id: userId, // Garder comme string pour éviter les problèmes de précision
+                                display_name: displayName,
+                                avatar_url: avatarUrl
+                            };
+                            
+                            console.log('🔍 DEBUG: selectedModerationUser défini:', selectedModerationUser);
+                            
+                            // Mettre à jour l'affichage
+                            moderationInput.value = displayName;
+                            moderationAutocompleteResults.classList.add('hidden');
+                            
+                            // Afficher les informations de l'utilisateur
+                            const avatarEl = document.getElementById('selected-user-avatar');
+                            const nameEl = document.getElementById('selected-user-name');
+                            const idEl = document.getElementById('selected-user-id');
+                            
+                            if (avatarEl) avatarEl.src = avatarUrl;
+                            if (nameEl) nameEl.textContent = displayName;
+                            if (idEl) idEl.textContent = `ID: ${userId}`;
+                            if (selectedUserInfo) {
+                                selectedUserInfo.classList.remove('hidden');
+                            }
+                            
+                            // Charger les warns de l'utilisateur
+                            loadUserWarns(userId);
+                        });
+                    });
+                } else {
+                    moderationAutocompleteResults.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Erreur lors de la recherche:', error);
+                moderationAutocompleteResults.classList.add('hidden');
+            }
+        }, 300);
+    });
+    
+    // Fermer l'autocomplétion quand on clique en dehors
+    document.addEventListener('click', function(e) {
+        if (!moderationInput.contains(e.target) && !moderationAutocompleteResults.contains(e.target)) {
+            moderationAutocompleteResults.classList.add('hidden');
+        }
+    });
+}
+
+// Initialiser quand le DOM est prêt
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initModerationAutocomplete);
+} else {
+    // DOM déjà chargé
+    initModerationAutocomplete();
+}
+
+// Fonction pour afficher le modal d'action de modération
+function showModerationActionModal(actionType, actionName, actionDescription, actionColor) {
+    const modal = document.getElementById('moderation-action-modal');
+    const titleEl = document.getElementById('moderation-action-title');
+    const descriptionEl = document.getElementById('moderation-action-description');
+    const reasonInput = document.getElementById('moderation-action-reason');
+    const cancelBtn = document.getElementById('moderation-action-cancel');
+    const confirmBtn = document.getElementById('moderation-action-confirm');
+    
+    if (!modal || !selectedModerationUser) return;
+    
+    titleEl.textContent = actionName;
+    descriptionEl.textContent = actionDescription.replace('{user}', selectedModerationUser.display_name);
+    reasonInput.value = '';
+    confirmBtn.className = `px-4 py-2 text-sm font-medium text-white rounded-md transition-colors ${actionColor}`;
+    confirmBtn.textContent = actionName;
+    
+    modal.classList.remove('hidden');
+    
+    // Nettoyer les anciens event listeners
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+    
+    newCancelBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+    });
+    
+    newConfirmBtn.addEventListener('click', async () => {
+        const reason = reasonInput.value.trim();
+        if (!reason) {
+            showMessageModal('error', 'Erreur', 'La raison est requise');
+            return;
+        }
+        
+        try {
+            console.log('🔍 DEBUG: Envoi de l\'action de modération:', {
+                actionType: actionType,
+                selectedModerationUser: selectedModerationUser,
+                userId: selectedModerationUser.id,
+                userIdType: typeof selectedModerationUser.id,
+                reason: reason
+            });
+            
+            const endpoint = `/api/moderation/${actionType}`;
+            const payload = {
+                user_id: selectedModerationUser.id, // Garder comme string, sera converti en int côté serveur
+                reason: reason
+            };
+            
+            console.log('🔍 DEBUG: Payload envoyé:', payload);
+            
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                const errorMessage = data.detail || data.message || "Une erreur est survenue";
+                showMessageModal('error', 'Erreur', errorMessage);
+                return;
+            }
+            
+            modal.classList.add('hidden');
+            showMessageModal('success', 'Succès', data.message || `${actionName} effectué avec succès !`);
+            
+            // Recharger les warns si disponibles
+            if (selectedModerationUser && selectedModerationUser.id) {
+                setTimeout(async () => {
+                    await loadUserWarns(selectedModerationUser.id);
+                }, 500);
+            }
+            
+            // Si c'est un warn, mettre à jour le compteur
+            if (actionType === 'warn' && selectedModerationUser && selectedModerationUser.id) {
+                setTimeout(async () => {
+                    await loadUserWarns(selectedModerationUser.id);
+                }, 500);
+            }
+        } catch (error) {
+            console.error('Erreur lors de l\'action de modération:', error);
+            showMessageModal('error', 'Erreur', "Erreur de connexion. Vérifiez que le bot Hermes est en ligne.");
+        }
+    });
+    
+    // Fermer en cliquant en dehors
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+        }
+    });
+}
+
+// Fonction pour afficher le modal d'action temporaire
+function showTempModerationActionModal(actionType, actionName, actionDescription, actionColor) {
+    const modal = document.getElementById('temp-moderation-action-modal');
+    const titleEl = document.getElementById('temp-moderation-action-title');
+    const descriptionEl = document.getElementById('temp-moderation-action-description');
+    const durationInput = document.getElementById('temp-moderation-duration');
+    const unitSelect = document.getElementById('temp-moderation-unit');
+    const reasonInput = document.getElementById('temp-moderation-reason');
+    const cancelBtn = document.getElementById('temp-moderation-action-cancel');
+    const confirmBtn = document.getElementById('temp-moderation-action-confirm');
+    
+    if (!modal || !selectedModerationUser) return;
+    
+    titleEl.textContent = actionName;
+    descriptionEl.textContent = actionDescription.replace('{user}', selectedModerationUser.display_name);
+    durationInput.value = '';
+    unitSelect.value = 'heures';
+    reasonInput.value = '';
+    confirmBtn.className = `px-4 py-2 text-sm font-medium text-white rounded-md transition-colors ${actionColor}`;
+    confirmBtn.textContent = actionName;
+    
+    modal.classList.remove('hidden');
+    
+    // Nettoyer les anciens event listeners
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    const newConfirmBtn = confirmBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+    confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+    
+    newCancelBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+    });
+    
+    newConfirmBtn.addEventListener('click', async () => {
+        const duration = parseInt(durationInput.value);
+        const unit = unitSelect.value;
+        const reason = reasonInput.value.trim();
+        
+        if (!duration || duration < 1) {
+            showMessageModal('error', 'Erreur', 'La durée doit être un nombre positif');
+            return;
+        }
+        if (!reason) {
+            showMessageModal('error', 'Erreur', 'La raison est requise');
+            return;
+        }
+        
+        try {
+            const endpoint = `/api/moderation/${actionType}`;
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: parseInt(selectedModerationUser.id),
+                    duration: duration,
+                    unit: unit,
+                    reason: reason
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                const errorMessage = data.detail || data.message || "Une erreur est survenue";
+                showMessageModal('error', 'Erreur', errorMessage);
+                return;
+            }
+            
+            modal.classList.add('hidden');
+            showMessageModal('success', 'Succès', data.message || `${actionName} effectué avec succès !`);
+        } catch (error) {
+            console.error('Erreur lors de l\'action de modération temporaire:', error);
+            showMessageModal('error', 'Erreur', "Erreur de connexion. Vérifiez que le bot Hermes est en ligne.");
+        }
+    });
+    
+    // Fermer en cliquant en dehors
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+        }
+    });
+}
+
+// Event listeners pour les boutons d'actions rapides
+document.addEventListener('DOMContentLoaded', function() {
+    const quickKickBtn = document.getElementById('quick-kick-btn');
+    const quickBanBtn = document.getElementById('quick-ban-btn');
+    const quickMuteBtn = document.getElementById('quick-mute-btn');
+    const quickUnmuteBtn = document.getElementById('quick-unmute-btn');
+    const quickTempbanBtn = document.getElementById('quick-tempban-btn');
+    const quickTempmuteBtn = document.getElementById('quick-tempmute-btn');
+    
+    const quickWarnBtn = document.getElementById('quick-warn-btn');
+    
+    if (quickWarnBtn) {
+        quickWarnBtn.addEventListener('click', () => {
+            if (!selectedModerationUser) {
+                showMessageModal('error', 'Erreur', 'Veuillez d\'abord sélectionner un utilisateur');
+                return;
+            }
+            showModerationActionModal('warn', 'Avertir l\'utilisateur', 'Vous allez donner un avertissement à {user}.', 'bg-yellow-600 dark:bg-yellow-500 hover:bg-yellow-700 dark:hover:bg-yellow-600');
+        });
+    }
+    
+    if (quickKickBtn) {
+        quickKickBtn.addEventListener('click', () => {
+            if (!selectedModerationUser) {
+                showMessageModal('error', 'Erreur', 'Veuillez d\'abord sélectionner un utilisateur');
+                return;
+            }
+            showModerationActionModal('kick', 'Expulser l\'utilisateur', 'Vous allez expulser {user} du serveur Discord.', 'bg-red-600 dark:bg-red-500 hover:bg-red-700 dark:hover:bg-red-600');
+        });
+    }
+    
+    if (quickBanBtn) {
+        quickBanBtn.addEventListener('click', () => {
+            if (!selectedModerationUser) {
+                showMessageModal('error', 'Erreur', 'Veuillez d\'abord sélectionner un utilisateur');
+                return;
+            }
+            showModerationActionModal('ban', 'Bannir l\'utilisateur', 'Vous allez bannir {user} du serveur Discord.', 'bg-red-700 dark:bg-red-600 hover:bg-red-800 dark:hover:bg-red-700');
+        });
+    }
+    
+    if (quickMuteBtn) {
+        quickMuteBtn.addEventListener('click', () => {
+            if (!selectedModerationUser) {
+                showMessageModal('error', 'Erreur', 'Veuillez d\'abord sélectionner un utilisateur');
+                return;
+            }
+            showModerationActionModal('mute', 'Muter l\'utilisateur', 'Vous allez muter {user} sur le serveur Discord.', 'bg-orange-600 dark:bg-orange-500 hover:bg-orange-700 dark:hover:bg-orange-600');
+        });
+    }
+    
+    if (quickUnmuteBtn) {
+        quickUnmuteBtn.addEventListener('click', () => {
+            if (!selectedModerationUser) {
+                showMessageModal('error', 'Erreur', 'Veuillez d\'abord sélectionner un utilisateur');
+                return;
+            }
+            showModerationActionModal('unmute', 'Unmuter l\'utilisateur', 'Vous allez unmuter {user} sur le serveur Discord.', 'bg-green-600 dark:bg-green-500 hover:bg-green-700 dark:hover:bg-green-600');
+        });
+    }
+    
+    if (quickTempbanBtn) {
+        quickTempbanBtn.addEventListener('click', () => {
+            if (!selectedModerationUser) {
+                showMessageModal('error', 'Erreur', 'Veuillez d\'abord sélectionner un utilisateur');
+                return;
+            }
+            showTempModerationActionModal('tempban', 'Bannir temporairement', 'Vous allez bannir temporairement {user} du serveur Discord.', 'bg-red-600 dark:bg-red-500 hover:bg-red-700 dark:hover:bg-red-600');
+        });
+    }
+    
+    if (quickTempmuteBtn) {
+        quickTempmuteBtn.addEventListener('click', () => {
+            if (!selectedModerationUser) {
+                showMessageModal('error', 'Erreur', 'Veuillez d\'abord sélectionner un utilisateur');
+                return;
+            }
+            showTempModerationActionModal('tempmute', 'Muter temporairement', 'Vous allez muter temporairement {user} sur le serveur Discord.', 'bg-orange-600 dark:bg-orange-500 hover:bg-orange-700 dark:hover:bg-orange-600');
+        });
+    }
+});
+{% endif %}
 </script>
 {% endblock %}
 

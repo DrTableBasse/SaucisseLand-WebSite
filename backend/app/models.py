@@ -107,3 +107,21 @@ class Tag(Base):
 
     articles = relationship("Article", secondary=article_tags, back_populates="tags")
 
+
+class AppConfig(Base):
+    """Modèle pour les configurations dynamiques de l'application."""
+
+    __tablename__ = "app_configs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    key = Column(String, unique=True, nullable=False, index=True)
+    value = Column(Text, nullable=False)
+    description = Column(Text)
+    category = Column(String, default="general")  # general, metrics, security, etc.
+    is_sensitive = Column(Boolean, default=False)  # Masquer la valeur dans l'interface
+    updated_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    updater = relationship("User")
+
