@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Mes articles aimés - Discord Blog{% endblock %}
+
+{% block content %}
+<div class="space-y-4 sm:space-y-6">
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">Mes articles aimés</h1>
+        <span class="text-sm text-gray-500 dark:text-gray-400" id="articles-count">Chargement...</span>
+    </div>
+    
+    <div id="articles-list" class="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        <!-- Les articles seront chargés ici via JavaScript -->
+        <p class="text-gray-500 dark:text-gray-400">Chargement...</p>
+    </div>
+    
+    <div id="empty-state" class="hidden text-center py-12">
+        <svg class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">Aucun article aimé</h3>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Vous n'avez pas encore aimé d'articles.</p>
+        <div class="mt-6">
+            <a href="/" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-700 dark:hover:bg-indigo-600">
+                Découvrir les articles
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+async function loadLikedArticles() {
+    try {
+        const response = await fetch('/api/articles/liked');
+        if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                document.getElementById('articles-list').innerHTML = 
+                    '<p class="text-red-600 dark:text-red-400">Vous devez être connecté pour voir vos articles aimés.</p>';
+                return;
+            }
+            throw new Error('Erreur lors du chargement');
+        }
+        
+        const articles = await response.json();
+        const container = document.getElementById('articles-list');
+        const emptyState = document.getElementById('empty-state');
+        const countSpan = document.getElementById('articles-count');
+        
+        // Mettre à jour le compteur
+        if (articles.length === 0) {
+            countSpan.textContent = 'Aucun article';
+        } else {
+            countSpan.textContent = `${articles.length} article${articles.length > 1 ? 's' : ''}`;
+        }
+        
+        if (articles.length === 0) {
+            container.classList.add('hidden');
+            emptyState.classList.remove('hidden');
+            return;
+        }
+        
+        emptyState.classList.add('hidden');
+        container.classList.remove('hidden');
+        
+        const html = articles.map(article => {
+            const title = escapeHTML(article.title || '');
+            const slug = escapeHTML(article.slug || '');
+            const excerpt = article.excerpt ? escapeHTML(article.excerpt) : '';
+            const author = escapeHTML(article.author?.username || '');
+            const date = article.created_at ? new Date(article.created_at).toLocaleDateString('fr-FR') : '';
+            
+            return `
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                <div class="p-4 sm:p-6">
+                    <div class="flex items-start justify-between mb-2">
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex-1">
+                            <a href="/article/${slug}" class="hover:text-indigo-600 dark:hover:text-indigo-400">${title}</a>
+                        </h2>
+                        <span class="ml-2 text-red-500 dark:text-red-400" title="Article aimé">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+                            </svg>
+                        </span>
+                    </div>
+                    ${excerpt ? `<p class="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4">${excerpt}</p>` : ''}
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                        <span>Par ${author}</span>
+                        <span>${date}</span>
+                    </div>
+                    <div class="mt-3 flex items-center gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                        <span>👁️ ${article.views} vues</span>
+                        <span>❤️ ${article.likes} likes</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        }).join('');
+        setSafeHTML(container, html);
+    } catch (error) {
+        console.error('Erreur lors du chargement des articles:', error);
+        document.getElementById('articles-list').innerHTML = 
+            '<p class="text-red-600 dark:text-red-400">Erreur lors du chargement des articles aimés.</p>';
+    }
+}
+
+loadLikedArticles();
+</script>
+{% endblock %}
+

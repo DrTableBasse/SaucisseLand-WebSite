@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+
+{% block title %}Administration - Discord Blog{% endblock %}
+
+{% block content %}
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 lg:p-8 transition-colors duration-200">
+    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6">⚙️ Administration</h1>
+    
+    {% if not user %}
+    <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 mb-6">
+        <p class="text-yellow-800 dark:text-yellow-300">Vous devez être connecté pour accéder à cette page.</p>
+        <a href="/api/auth/login" class="mt-2 inline-block text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300">Se connecter avec Discord →</a>
+    </div>
+    {% else %}
+    
+    <!-- Section Métriques -->
+    <div class="mb-8">
+        <h2 class="text-xl font-semibold text-gray-800 dark:text-white mb-4">📊 Métriques Grafana</h2>
+        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-700 dark:text-gray-300 mb-2">Activer l'exportation des métriques pour Grafana</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Les métriques seront disponibles sur <code class="bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded">/metrics</code> au format Prometheus</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="metrics-toggle" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
+                </label>
+            </div>
+        </div>
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-4">
+            <p class="text-sm text-blue-800 dark:text-blue-300">
+                <strong>Endpoints disponibles :</strong><br>
+                • <code class="bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded">GET /health</code> - Métriques détaillées (JSON)<br>
+                • <code class="bg-blue-100 dark:bg-blue-800 px-2 py-1 rounded">GET /metrics</code> - Métriques Prometheus (format Grafana)
+            </p>
+        </div>
+    </div>
+    
+    <!-- Section Configurations -->
+    <div class="mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-white">🔧 Configurations</h2>
+            <button onclick="showCreateConfigModal()" class="bg-indigo-600 dark:bg-indigo-500 text-white px-4 py-2 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 text-sm sm:text-base">
+                + Nouvelle configuration
+            </button>
+        </div>
+        
+        <!-- Filtres par catégorie -->
+        <div class="mb-4 flex flex-wrap gap-2">
+            <button onclick="filterConfigs('all')" id="filter-all" class="px-3 sm:px-4 py-2 rounded-md bg-indigo-600 dark:bg-indigo-500 text-white hover:bg-indigo-700 dark:hover:bg-indigo-600 text-sm">
+                Toutes
+            </button>
+            <button onclick="filterConfigs('general')" id="filter-general" class="px-3 sm:px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 text-sm">
+                Général
+            </button>
+            <button onclick="filterConfigs('metrics')" id="filter-metrics" class="px-3 sm:px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 text-sm">
+                Métriques
+            </button>
+            <button onclick="filterConfigs('security')" id="filter-security" class="px-3 sm:px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 text-sm">
+                Sécurité
+            </button>
+        </div>
+        
+        <div id="configs-list" class="space-y-4">
+            <p class="text-gray-500 dark:text-gray-400">Chargement...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de création/édition de configuration -->
+<div id="config-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+        <h3 id="modal-title" class="text-xl font-bold text-gray-900 dark:text-white mb-4">Nouvelle configuration</h3>
+        <form id="config-form" onsubmit="saveConfig(event)">
+            <input type="hidden" id="config-key-original" value="">
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Clé *</label>
+                <input type="text" id="config-key" required 
+                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                       placeholder="ex: max_upload_size">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Identifiant unique de la configuration</p>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Valeur *</label>
+                <textarea id="config-value" required rows="3"
+                          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          placeholder="Valeur de la configuration"></textarea>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+                <textarea id="config-description" rows="2"
+                          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          placeholder="Description de cette configuration"></textarea>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Catégorie</label>
+                <select id="config-category"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    <option value="general">Général</option>
+                    <option value="metrics">Métriques</option>
+                    <option value="security">Sécurité</option>
+                    <option value="performance">Performance</option>
+                    <option value="other">Autre</option>
+                </select>
+            </div>
+            
+            <div class="mb-4">
+                <label class="flex items-center">
+                    <input type="checkbox" id="config-sensitive"
+                           class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700">
+                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Valeur sensible (masquée dans l'interface)</span>
+                </label>
+            </div>
+            
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="closeConfigModal()" 
+                        class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600">
+                    Annuler
+                </button>
+                <button type="submit" 
+                        class="px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600">
+                    Enregistrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let allConfigs = [];
+let currentCategoryFilter = 'all';
+let metricsEnabled = false;
+
+// Charger les configurations
+async function loadConfigs() {
+    try {
+        const response = await fetch('/api/admin/configs');
+        if (!response.ok) {
+            if (response.status === 403) {
+                document.getElementById('configs-list').innerHTML = 
+                    '<p class="text-red-600 dark:text-red-400">Vous n\'avez pas les permissions d\'administration.</p>';
+                return;
+            }
+            throw new Error('Erreur lors du chargement');
+        }
+        
+        allConfigs = await response.json();
+        displayConfigs();
+    } catch (error) {
+        console.error('Erreur:', error);
+        document.getElementById('configs-list').innerHTML = 
+            '<p class="text-red-600 dark:text-red-400">Erreur lors du chargement des configurations.</p>';
+    }
+}
+
+// Charger le statut des métriques
+async function loadMetricsStatus() {
+    try {
+        const response = await fetch('/api/admin/metrics/status');
+        if (response.ok) {
+            const data = await response.json();
+            metricsEnabled = data.metrics_enabled;
+            document.getElementById('metrics-toggle').checked = metricsEnabled;
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement du statut des métriques:', error);
+    }
+}
+
+// Afficher les configurations
+function displayConfigs() {
+    const container = document.getElementById('configs-list');
+    
+    let filtered = allConfigs;
+    if (currentCategoryFilter !== 'all') {
+        filtered = allConfigs.filter(c => c.category === currentCategoryFilter);
+    }
+    
+    if (filtered.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 dark:text-gray-400">Aucune configuration trouvée.</p>';
+        return;
+    }
+    
+    container.innerHTML = filtered.map(config => {
+        const valueDisplay = config.is_sensitive 
+            ? '<span class="text-gray-400 italic">••••••••</span>'
+            : `<code class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm">${escapeHTML(config.value)}</code>`;
+        
+        return `
+            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow bg-white dark:bg-gray-800">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-2">
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">${escapeHTML(config.key)}</h3>
+                            <span class="px-2 py-1 text-xs bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 rounded">
+                                ${escapeHTML(config.category)}
+                            </span>
+                            ${config.is_sensitive ? '<span class="px-2 py-1 text-xs bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded">Sensible</span>' : ''}
+                        </div>
+                        ${config.description ? `<p class="text-gray-600 dark:text-gray-400 mb-2 text-sm">${escapeHTML(config.description)}</p>` : ''}
+                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                            <span>Valeur: ${valueDisplay}</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="editConfig('${config.key}')" 
+                                class="bg-blue-600 dark:bg-blue-500 text-white px-3 py-2 rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 text-sm">
+                            Modifier
+                        </button>
+                        <button onclick="deleteConfig('${config.key}')" 
+                                class="bg-red-600 dark:bg-red-500 text-white px-3 py-2 rounded-md hover:bg-red-700 dark:hover:bg-red-600 text-sm">
+                            Supprimer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Filtrer par catégorie
+function filterConfigs(category) {
+    currentCategoryFilter = category;
+    
+    // Mettre à jour les boutons
+    document.querySelectorAll('[id^="filter-"]').forEach(btn => {
+        btn.classList.remove('bg-indigo-600', 'dark:bg-indigo-500', 'text-white');
+        btn.classList.add('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+    });
+    
+    const activeBtn = document.getElementById(`filter-${category}`);
+    if (activeBtn) {
+        activeBtn.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+        activeBtn.classList.add('bg-indigo-600', 'dark:bg-indigo-500', 'text-white');
+    }
+    
+    displayConfigs();
+}
+
+// Afficher le modal de création
+function showCreateConfigModal() {
+    document.getElementById('modal-title').textContent = 'Nouvelle configuration';
+    document.getElementById('config-form').reset();
+    document.getElementById('config-key-original').value = '';
+    document.getElementById('config-key').disabled = false;
+    document.getElementById('config-modal').classList.remove('hidden');
+}
+
+// Éditer une configuration
+function editConfig(key) {
+    const config = allConfigs.find(c => c.key === key);
+    if (!config) return;
+    
+    document.getElementById('modal-title').textContent = 'Modifier la configuration';
+    document.getElementById('config-key').value = config.key;
+    document.getElementById('config-key-original').value = config.key;
+    document.getElementById('config-key').disabled = true;
+    document.getElementById('config-value').value = config.is_sensitive ? '' : config.value;
+    document.getElementById('config-description').value = config.description || '';
+    document.getElementById('config-category').value = config.category;
+    document.getElementById('config-sensitive').checked = config.is_sensitive;
+    document.getElementById('config-modal').classList.remove('hidden');
+}
+
+// Fermer le modal
+function closeConfigModal() {
+    document.getElementById('config-modal').classList.add('hidden');
+}
+
+// Sauvegarder une configuration
+async function saveConfig(event) {
+    event.preventDefault();
+    
+    const key = document.getElementById('config-key').value;
+    const originalKey = document.getElementById('config-key-original').value;
+    const value = document.getElementById('config-value').value;
+    const description = document.getElementById('config-description').value;
+    const category = document.getElementById('config-category').value;
+    const isSensitive = document.getElementById('config-sensitive').checked;
+    
+    try {
+        let response;
+        if (originalKey) {
+            // Mise à jour
+            response = await fetch(`/api/admin/configs/${originalKey}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    value: value,
+                    description: description,
+                    category: category,
+                    is_sensitive: isSensitive,
+                }),
+            });
+        } else {
+            // Création
+            response = await fetch('/api/admin/configs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    key: key,
+                    value: value,
+                    description: description,
+                    category: category,
+                    is_sensitive: isSensitive,
+                }),
+            });
+        }
+        
+        if (!response.ok) {
+            const error = await response.json();
+            alert('Erreur: ' + (error.detail || 'Erreur inconnue'));
+            return;
+        }
+        
+        closeConfigModal();
+        await loadConfigs();
+    } catch (error) {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la sauvegarde');
+    }
+}
+
+// Supprimer une configuration
+async function deleteConfig(key) {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer la configuration "${key}" ?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/admin/configs/${key}`, {
+            method: 'DELETE',
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            alert('Erreur: ' + (error.detail || 'Erreur inconnue'));
+            return;
+        }
+        
+        await loadConfigs();
+    } catch (error) {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la suppression');
+    }
+}
+
+// Toggle métriques
+document.getElementById('metrics-toggle').addEventListener('change', async function() {
+    const enabled = this.checked;
+    
+    try {
+        const response = await fetch('/api/admin/metrics/toggle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ enabled: enabled }),
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            alert('Erreur: ' + (error.detail || 'Erreur inconnue'));
+            this.checked = !enabled; // Revenir à l'état précédent
+            return;
+        }
+        
+        metricsEnabled = enabled;
+    } catch (error) {
+        console.error('Erreur:', error);
+        alert('Erreur lors de la modification');
+        this.checked = !enabled;
+    }
+});
+
+// Fonction utilitaire pour échapper le HTML
+function escapeHTML(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// Charger au démarrage
+loadConfigs();
+loadMetricsStatus();
+</script>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,49 @@
+/* Styles pour EasyMDE en mode dark */
+.dark-mode .EasyMDEContainer .CodeMirror {
+    background-color: #1f2937 !important;
+    color: #f3f4f6 !important;
+    border-color: #374151 !important;
+}
+
+.dark-mode .EasyMDEContainer .CodeMirror-cursor {
+    border-color: #f3f4f6 !important;
+}
+
+.dark-mode .EasyMDEContainer .editor-toolbar {
+    background-color: #374151 !important;
+    border-color: #4b5563 !important;
+}
+
+.dark-mode .EasyMDEContainer .editor-toolbar button {
+    color: #d1d5db !important;
+}
+
+.dark-mode .EasyMDEContainer .editor-toolbar button:hover,
+.dark-mode .EasyMDEContainer .editor-toolbar button.active {
+    background-color: #4b5563 !important;
+    border-color: #6b7280 !important;
+}
+
+.dark-mode .EasyMDEContainer .editor-preview {
+    background-color: #1f2937 !important;
+    color: #f3f4f6 !important;
+}
+
+.dark-mode .EasyMDEContainer .editor-preview-side {
+    background-color: #1f2937 !important;
+    border-left-color: #374151 !important;
+}
+
+.dark-mode .EasyMDEContainer .CodeMirror-selected {
+    background-color: #374151 !important;
+}
+
+.dark-mode .EasyMDEContainer .CodeMirror-gutters {
+    background-color: #111827 !important;
+    border-right-color: #374151 !important;
+}
+
+.dark-mode .EasyMDEContainer .CodeMirror-linenumber {
+    color: #9ca3af !important;
+}
+

@@ -1,0 +1,40 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: discord_blog_backend
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      BASE_URL: ${BASE_URL}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
+      DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET}
+      DISCORD_REDIRECT_URI: ${DISCORD_REDIRECT_URI:-}
+      DISCORD_GUILD_ID: ${DISCORD_GUILD_ID}
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN}
+      ALLOWED_ROLE_IDS_STR: ${ALLOWED_ROLE_IDS:-}
+      SECRET_KEY: ${SECRET_KEY}
+      CORS_ORIGINS_STR: ${CORS_ORIGINS:-}
+      HERMES_API_URL: ${HERMES_API_URL:-http://localhost:8001}
+      HERMES_API_TOKEN: ${HERMES_API_TOKEN:-}
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend/static:/app/static
+      - ./backend/templates:/app/templates
+      - ./backend/app:/app/app
+    ports:
+      - "8000:8000"
+    # Utilise la base de données PostgreSQL partagée du bot Hermes
+    # Le réseau externe permet de se connecter au conteneur PostgreSQL du bot
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - hermes_network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+
+networks:
+  hermes_network:
+    external: true
+    name: hermes_network
+

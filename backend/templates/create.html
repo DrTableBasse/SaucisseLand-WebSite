@@ -1,0 +1,579 @@
+{% extends "base.html" %}
+
+{% block title %}Créer un article - Discord Blog{% endblock %}
+
+{% block content %}
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 lg:p-8 transition-colors duration-200">
+    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6">Créer un nouvel article</h1>
+    
+    <form id="article-form" class="space-y-6" novalidate>
+        <div>
+            <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Titre</label>
+            <input type="text" id="title" name="title" required
+                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+        </div>
+        
+        <div>
+            <label for="slug" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Slug (URL)</label>
+            <input type="text" id="slug" name="slug" required
+                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">L'URL de votre article (ex: mon-premier-article)</p>
+        </div>
+        
+        <div>
+            <label for="excerpt" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Résumé</label>
+            <textarea id="excerpt" name="excerpt" rows="3"
+                      class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"></textarea>
+        </div>
+        
+        <div>
+            <div class="flex items-center justify-between mb-3">
+                <label for="tags" class="block text-sm font-medium text-gray-700">Tags</label>
+                <a href="/tags" target="_blank" class="text-sm text-indigo-600 hover:text-indigo-800">Gérer les tags →</a>
+            </div>
+            
+            <!-- Zone de recherche des tags -->
+            <div class="mb-3">
+                <input type="text" id="tag-search" placeholder="Rechercher un tag..." 
+                       class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+            </div>
+            
+            <!-- Tags disponibles -->
+            <div id="tags-available" class="flex flex-wrap gap-2 mb-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-md border border-gray-200 dark:border-gray-700 min-h-[60px]">
+                <p class="text-sm text-gray-500 w-full">Chargement des tags...</p>
+            </div>
+            
+            <!-- Tags sélectionnés -->
+            <div class="mb-2">
+                <p class="text-xs text-gray-600 mb-2">Tags sélectionnés :</p>
+                <div id="tags-container" class="flex flex-wrap gap-2 min-h-[40px] p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
+                    <p class="text-sm text-gray-400 dark:text-gray-500 italic">Aucun tag sélectionné</p>
+                </div>
+            </div>
+        </div>
+        
+        <div>
+            <label for="content" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contenu (Markdown)</label>
+            <div id="editor-container">
+                <textarea id="content" name="content"></textarea>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Utilisez la barre d'outils ou la syntaxe Markdown pour formater votre article</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center">
+            <input type="checkbox" id="published" name="published"
+                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+            <label for="published" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Publier immédiatement</label>
+        </div>
+        <div id="publish-warning" class="hidden mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+            <p class="text-sm text-yellow-800 dark:text-yellow-300">
+                ⚠️ <strong>Attention :</strong> L'article sera immédiatement visible par tous les visiteurs du site.
+            </p>
+        </div>
+        
+        <!-- Modal de confirmation de publication -->
+        <div id="publish-confirm-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+                <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0 w-10 h-10 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
+                        <span class="text-yellow-600 dark:text-yellow-400 text-xl">⚠️</span>
+                    </div>
+                    <h3 class="ml-3 text-lg font-medium text-gray-900 dark:text-white">Confirmation de publication</h3>
+                </div>
+                <div class="mb-6">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        Vous êtes sur le point de publier cet article immédiatement.
+                    </p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        Il sera <strong>visible par tous les visiteurs</strong> du site.
+                    </p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3 sm:justify-end">
+                    <button type="button" id="publish-cancel-btn" 
+                            class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600">
+                        Annuler
+                    </button>
+                    <button type="button" id="publish-confirm-btn" 
+                            class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 dark:bg-indigo-500 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600">
+                        Confirmer la publication
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row gap-3 sm:space-x-4">
+            <button type="submit" class="bg-indigo-600 dark:bg-indigo-500 text-white px-4 sm:px-6 py-2 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 text-sm sm:text-base">
+                Créer l'article
+            </button>
+            <a href="/" class="bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 sm:px-6 py-2 rounded-md hover:bg-gray-400 dark:hover:bg-gray-600 text-center text-sm sm:text-base">
+                Annuler
+            </a>
+        </div>
+    </form>
+    
+    <div id="upload-section" class="mt-8 border-t pt-6">
+        <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4">Upload d'images</h2>
+        <div class="flex flex-col sm:flex-row gap-3 sm:items-center">
+            <input type="file" id="image-upload" accept="image/*" class="mb-2 sm:mb-0 text-sm sm:text-base">
+            <button onclick="uploadImage()" class="bg-green-600 dark:bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-700 dark:hover:bg-green-600 text-sm sm:text-base whitespace-nowrap">
+                Uploader l'image
+            </button>
+        </div>
+        <div id="upload-result" class="mt-4"></div>
+    </div>
+</div>
+
+
+<script>
+// Générer le slug automatiquement depuis le titre
+document.addEventListener('DOMContentLoaded', function() {
+    const titleInput = document.getElementById('title');
+    if (titleInput) {
+        titleInput.addEventListener('input', function(e) {
+            const slug = e.target.value
+                .toLowerCase()
+                .replace(/[^\w\s-]/g, '')
+                .replace(/[-\s]+/g, '-')
+                .trim();
+            const slugInput = document.getElementById('slug');
+            if (slugInput) {
+                slugInput.value = slug;
+            }
+        });
+    }
+});
+
+// Configurer marked pour les options de sécurité et Prism
+marked.setOptions({
+    breaks: true,
+    gfm: true,
+    sanitize: false,
+    smartLists: true,
+    smartypants: true,
+    highlight: function(code, lang) {
+        // Ne pas faire la coloration ici, laisser Prism le faire après
+        // On retourne juste le code brut, marked ajoutera la classe language-xxx
+        return code;
+    }
+});
+
+// Variables globales pour les tags
+let allTags = [];
+let selectedTagIds = new Set();
+let easyMDE = null;
+
+// Charger les tags disponibles
+async function loadTags() {
+    try {
+        const response = await fetch('/api/tags/');
+        if (!response.ok) {
+            throw new Error('Erreur lors du chargement des tags');
+        }
+        allTags = await response.json();
+        renderAvailableTags();
+        updateSelectedTags();
+    } catch (error) {
+        document.getElementById('tags-available').innerHTML = 
+            '<p class="text-sm text-red-500 dark:text-red-400">Erreur lors du chargement des tags</p>';
+    }
+}
+
+// Afficher les tags disponibles (avec filtre de recherche)
+function renderAvailableTags() {
+    const container = document.getElementById('tags-available');
+    const searchTerm = document.getElementById('tag-search').value.toLowerCase();
+    
+    // Filtrer les tags selon la recherche (nom et description uniquement, pas le slug)
+    const filteredTags = allTags.filter(tag => 
+        tag.name.toLowerCase().includes(searchTerm) ||
+        (tag.description && tag.description.toLowerCase().includes(searchTerm))
+    );
+    
+    if (filteredTags.length === 0) {
+        container.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400 w-full">Aucun tag trouvé</p>';
+        return;
+    }
+    
+    const html = filteredTags.map(tag => {
+        const isSelected = selectedTagIds.has(tag.id);
+        const selectedClass = isSelected ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105';
+        const tagName = escapeHTML(tag.name || '');
+        const tagColor = escapeHTML(tag.color || '#3b82f6');
+        const tagDescription = tag.description ? escapeHTML(tag.description) : '';
+        
+        return `
+            <div class="tag-item ${selectedClass}" data-tag-id="${tag.id}" ${isSelected ? 'data-disabled="true"' : ''}>
+                <div class="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all"
+                     style="background-color: ${tagColor}15; 
+                            border-color: ${tagColor}; 
+                            color: ${tagColor};">
+                    <span>${tagName}</span>
+                    ${isSelected ? '<span class="ml-2 text-xs">✓</span>' : ''}
+                </div>
+                ${tagDescription ? `<div class="mt-1 text-xs text-gray-500 dark:text-gray-400 max-w-[200px]">${tagDescription}</div>` : ''}
+            </div>
+        `;
+    }).join('');
+    setSafeHTML(container, html);
+}
+
+// Basculer la sélection d'un tag
+function toggleTag(tagId) {
+    if (selectedTagIds.has(tagId)) {
+        selectedTagIds.delete(tagId);
+    } else {
+        selectedTagIds.add(tagId);
+    }
+    renderAvailableTags();
+    updateSelectedTags();
+}
+
+// Afficher les tags sélectionnés
+function updateSelectedTags() {
+    const container = document.getElementById('tags-container');
+    
+    if (selectedTagIds.size === 0) {
+        container.innerHTML = '<p class="text-sm text-gray-400 dark:text-gray-500 italic">Aucun tag sélectionné</p>';
+        return;
+    }
+    
+    const selectedTags = allTags.filter(tag => selectedTagIds.has(tag.id));
+    
+    const html = selectedTags.map(tag => {
+        const tagName = escapeHTML(tag.name || '');
+        const tagColor = escapeHTML(tag.color || '#3b82f6');
+        const tagDescription = tag.description ? escapeHTML(tag.description) : '';
+        
+        return `
+            <div class="inline-flex items-start gap-2 bg-white dark:bg-gray-800 rounded-lg p-2 border border-gray-300 dark:border-gray-700 shadow-sm" data-tag-id="${tag.id}">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full" style="background-color: ${tagColor};"></div>
+                    <span class="text-sm font-medium" style="color: ${tagColor};">
+                        ${tagName}
+                    </span>
+                    <button type="button" class="tag-remove-btn ml-1 text-gray-400 hover:text-red-500 transition-colors" data-tag-id="${tag.id}">
+                        ×
+                    </button>
+                </div>
+                ${tagDescription ? `
+                    <div class="text-xs text-gray-600 italic max-w-[300px]">
+                        ${tagDescription}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }).join('');
+    setSafeHTML(container, html);
+}
+
+// Initialiser tout après le chargement du DOM
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialiser EasyMDE - Éditeur Markdown avec barre d'outils
+    if (typeof EasyMDE !== 'undefined') {
+        const contentElement = document.getElementById('content');
+        if (contentElement) {
+            easyMDE = new EasyMDE({
+                element: contentElement,
+                spellChecker: false,
+                autosave: {
+                    enabled: false
+                },
+                placeholder: 'Écrivez votre article en Markdown ici...',
+                status: ['lines', 'words', 'cursor'],
+                toolbar: [
+                    'bold', 'italic', 'strikethrough', '|',
+                    'heading-1', 'heading-2', 'heading-3', '|',
+                    'quote', 'unordered-list', 'ordered-list', '|',
+                    'link', 'image', 'table', '|',
+                    'code', 'horizontal-rule', '|',
+                    'preview', 'side-by-side', 'fullscreen', '|',
+                    'guide'
+                ],
+                renderingConfig: {
+                    singleLineBreaks: false,
+                    codeSyntaxHighlighting: true
+                },
+                previewClass: ['prose', 'prose-sm', 'dark:prose-invert', 'max-w-none'],
+                previewRender: function(plainText) {
+                    // Utiliser marked pour le rendu
+                    const html = marked.parse(plainText);
+                    // Sanitizer avec DOMPurify
+                    return DOMPurify.sanitize(html, {
+                        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+                                       'ul', 'ol', 'li', 'blockquote', 'code', 'pre', 'a', 'img', 'hr',
+                                       'table', 'thead', 'tbody', 'tr', 'th', 'td', 'del', 'ins', 'sub', 'sup'],
+                        ALLOWED_ATTR: ['href', 'title', 'target', 'rel', 'src', 'alt', 'class', 'align', 'colspan', 'rowspan'],
+                        ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i
+                    });
+                },
+                toolbarButtonClassPrefix: 'easymde-button',
+                initialValue: contentElement.value || ''
+            });
+            
+            // Adapter EasyMDE au dark mode
+            const updateEasyMDEDarkMode = () => {
+                const isDark = document.documentElement.classList.contains('dark');
+                const editor = document.querySelector('.EasyMDEContainer');
+                if (editor) {
+                    if (isDark) {
+                        editor.classList.add('dark-mode');
+                    } else {
+                        editor.classList.remove('dark-mode');
+                    }
+                }
+            };
+            
+            // Observer les changements de dark mode
+            const observer = new MutationObserver(updateEasyMDEDarkMode);
+            observer.observe(document.documentElement, {
+                attributes: true,
+                attributeFilter: ['class']
+            });
+            updateEasyMDEDarkMode();
+        }
+    }
+    
+    // Recherche de tags
+    const tagSearch = document.getElementById('tag-search');
+    if (tagSearch) {
+        tagSearch.addEventListener('input', function() {
+            renderAvailableTags();
+        });
+    }
+    
+    // Délégation d'événements pour les tags disponibles (plus robuste)
+    const tagsAvailableContainer = document.getElementById('tags-available');
+    if (tagsAvailableContainer) {
+        tagsAvailableContainer.addEventListener('click', function(e) {
+            // Trouver l'élément tag-item le plus proche
+            const tagItem = e.target.closest('.tag-item');
+            
+            if (tagItem) {
+                const tagId = parseInt(tagItem.getAttribute('data-tag-id'));
+                const isDisabled = tagItem.getAttribute('data-disabled') === 'true';
+                
+                if (!isDisabled && tagId && !isNaN(tagId)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleTag(tagId);
+                }
+            }
+        });
+    }
+    
+    // Délégation d'événements pour les boutons de suppression des tags sélectionnés
+    const tagsContainer = document.getElementById('tags-container');
+    if (tagsContainer) {
+        tagsContainer.addEventListener('click', function(e) {
+            const removeBtn = e.target.closest('.tag-remove-btn');
+            if (removeBtn) {
+                const tagId = parseInt(removeBtn.getAttribute('data-tag-id'));
+                if (tagId && !isNaN(tagId)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleTag(tagId);
+                }
+            }
+        });
+    }
+    
+    // Charger les tags au chargement de la page
+    loadTags();
+
+// Upload d'image
+async function uploadImage() {
+    const fileInput = document.getElementById('image-upload');
+    if (!fileInput.files[0]) {
+        alert('Veuillez sélectionner une image');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    
+    try {
+        const response = await fetch('/api/images/upload', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Erreur lors de l\'upload');
+        }
+        
+        const image = await response.json();
+        const imageUrl = `/uploads/${image.filename}`;
+        const markdown = `![${image.original_filename}](${imageUrl})`;
+        
+        // Insérer dans EasyMDE
+        if (easyMDE) {
+            const cursor = easyMDE.codemirror.getCursor();
+            const doc = easyMDE.codemirror.getDoc();
+            doc.replaceRange(markdown, cursor);
+            easyMDE.codemirror.focus();
+        } else {
+            // Fallback si EasyMDE n'est pas chargé
+            const content = document.getElementById('content');
+            const start = content.selectionStart;
+            const end = content.selectionEnd;
+            const text = content.value;
+            content.value = text.substring(0, start) + markdown + text.substring(end);
+            content.focus();
+            content.setSelectionRange(start + markdown.length, start + markdown.length);
+        }
+        
+        document.getElementById('upload-result').innerHTML = 
+            `<p class="text-green-600">Image uploadée avec succès !</p>`;
+        fileInput.value = '';
+    } catch (error) {
+        document.getElementById('upload-result').innerHTML = 
+            `<p class="text-red-600">Erreur: ${error.message}</p>`;
+    }
+}
+
+// Cette partie est maintenant dans DOMContentLoaded
+
+    // Fonction pour soumettre le formulaire
+async function submitArticleForm() {
+    // Validation côté client
+    const title = document.getElementById('title').value.trim();
+    if (!title) {
+        alert('Le titre est obligatoire');
+        document.getElementById('title').focus();
+        return;
+    }
+    
+    // Récupérer le contenu depuis EasyMDE ou le textarea
+    const content = easyMDE ? easyMDE.value() : (document.getElementById('content').value || '');
+    if (!content.trim()) {
+        alert('Le contenu est obligatoire');
+        if (easyMDE) {
+            easyMDE.codemirror.focus();
+        } else {
+            document.getElementById('content').focus();
+        }
+        return;
+    }
+    
+    // Récupérer les tags sélectionnés
+    const selectedTags = Array.from(selectedTagIds);
+    
+    const formData = {
+        title: title,
+        slug: document.getElementById('slug').value.trim() || title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[-\s]+/g, '-').trim(),
+        content: content,
+        excerpt: document.getElementById('excerpt').value.trim() || null,
+        published: document.getElementById('published').checked,
+        tag_ids: selectedTags
+    };
+    
+    try {
+        const response = await fetch('/api/articles/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({ detail: 'Erreur inconnue' }));
+            let errorMessage = error.detail || 'Erreur lors de la création';
+            
+            // Messages d'erreur plus clairs
+            if (response.status === 401) {
+                errorMessage = 'Vous devez être connecté pour créer un article. Veuillez vous reconnecter.';
+            } else if (response.status === 403) {
+                errorMessage = 'Vous n\'avez pas les permissions nécessaires pour créer des articles. Vous devez avoir un des rôles Discord autorisés.';
+            }
+            
+            throw new Error(errorMessage);
+        }
+        
+        const article = await response.json();
+        window.location.href = `/article/${article.slug}`;
+    } catch (error) {
+        alert('Erreur: ' + error.message);
+        
+        // Réactiver le bouton de soumission
+        const submitBtn = document.querySelector('#article-form button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Créer l\'article';
+        }
+    }
+}
+
+    // Soumettre le formulaire
+    const articleForm = document.getElementById('article-form');
+    if (articleForm) {
+        articleForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const published = document.getElementById('published').checked;
+            
+            // Afficher la modal de confirmation si l'article doit être publié
+            if (published) {
+                const modal = document.getElementById('publish-confirm-modal');
+                if (modal) {
+                    modal.classList.remove('hidden');
+                }
+            } else {
+                // Pas de confirmation nécessaire, soumettre directement
+                await submitArticleForm();
+            }
+        });
+    }
+    
+    // Gestion de la modal de confirmation
+    const publishCancelBtn = document.getElementById('publish-cancel-btn');
+    if (publishCancelBtn) {
+        publishCancelBtn.addEventListener('click', function() {
+            document.getElementById('publish-confirm-modal').classList.add('hidden');
+        });
+    }
+    
+    const publishConfirmBtn = document.getElementById('publish-confirm-btn');
+    if (publishConfirmBtn) {
+        publishConfirmBtn.addEventListener('click', async function() {
+            this.disabled = true;
+            this.textContent = 'Publication en cours...';
+            document.getElementById('publish-confirm-modal').classList.add('hidden');
+            try {
+                await submitArticleForm();
+            } catch (error) {
+                this.disabled = false;
+                this.textContent = 'Confirmer la publication';
+            }
+        });
+    }
+    
+    // Fermer la modal en cliquant en dehors
+    const publishModal = document.getElementById('publish-confirm-modal');
+    if (publishModal) {
+        publishModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+            }
+        });
+    }
+    
+    // Afficher/masquer l'avertissement de publication
+    const publishedCheckbox = document.getElementById('published');
+    if (publishedCheckbox) {
+        publishedCheckbox.addEventListener('change', function() {
+            const warning = document.getElementById('publish-warning');
+            if (warning) {
+                if (this.checked) {
+                    warning.classList.remove('hidden');
+                } else {
+                    warning.classList.add('hidden');
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+

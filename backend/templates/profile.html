@@ -1,0 +1,555 @@
+{% extends "base.html" %}
+
+{% block title %}Mon profil - Discord Blog{% endblock %}
+
+{% block content %}
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 lg:p-8 transition-colors duration-200" {% if user and user.discord_id %}data-user-id="{{ user.discord_id|string }}"{% endif %}>
+    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-6">Mon profil</h1>
+    
+    {% if user %}
+        <div class="space-y-6">
+            <!-- Informations principales -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 pb-6 border-b border-gray-200 dark:border-gray-700">
+                {% if user.avatar %}
+                    <img src="https://cdn.discordapp.com/avatars/{{ user.discord_id }}/{{ user.avatar }}.png?size=128" 
+                         alt="Avatar de {{ user.username }}" 
+                         class="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-indigo-500">
+                {% else %}
+                    <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-indigo-500 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold">
+                        {{ user.username[0].upper() }}
+                    </div>
+                {% endif %}
+                <div class="flex-1">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-1">{{ user.username }}</h2>
+                    {% if user.email %}
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">{{ user.email }}</p>
+                    {% endif %}
+                    <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                        Membre depuis le {{ user.created_at.strftime('%d/%m/%Y') if user.created_at else 'N/A' }}
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Statistiques -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Articles créés</p>
+                            <p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{{ articles_count }}</p>
+                        </div>
+                        <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                </div>
+                
+                <div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Articles aimés</p>
+                            <p class="text-2xl font-bold text-red-600 dark:text-red-400">{{ liked_count }}</p>
+                        </div>
+                        <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                
+                <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Permissions</p>
+                            <p class="text-lg font-bold {% if can_create_articles %}text-green-600 dark:text-green-400{% else %}text-gray-600 dark:text-gray-400{% endif %}">
+                                {% if can_create_articles %}✅ Autorisé{% else %}❌ Non autorisé{% endif %}
+                            </p>
+                        </div>
+                        <svg class="w-8 h-8 {% if can_create_articles %}text-green-400{% else %}text-gray-400{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                        </svg>
+                    </div>
+                </div>
+                
+                <div class="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Avertissements</p>
+                            <p class="text-2xl font-bold text-orange-600 dark:text-orange-400" id="warn-count">-</p>
+                        </div>
+                        <svg class="w-8 h-8 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Section des avertissements -->
+            <div class="mt-8">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Mes avertissements</h3>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <span class="text-sm text-gray-500 dark:text-gray-400" id="warns-summary">-</span>
+                        <!-- Contrôles de tri et pagination -->
+                        <div class="flex items-center gap-2" id="warns-controls" style="display: none;">
+                            <select id="warns-sort" class="text-sm border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="recent">Plus récent → Plus ancien</option>
+                                <option value="oldest">Plus ancien → Plus récent</option>
+                            </select>
+                            <select id="warns-limit" class="text-sm border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="5">5</option>
+                                <option value="10" selected>10</option>
+                                <option value="all">Tous</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div id="warns-container" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 dark:border-indigo-400 mb-2"></div>
+                        <p>Chargement des avertissements...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Informations détaillées -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-3">Informations du compte</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-0">ID Discord</p>
+                            <p class="text-sm font-mono bg-gray-100 dark:bg-gray-700 py-2 rounded break-all text-gray-900 dark:text-white mt-0 text-left pl-0" id="discord-id-display">{{ user.discord_id }}</p>
+                        </div>
+                        {% if user.discriminator and user.discriminator != '0' %}
+                        <div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-0">Discriminateur</p>
+                            <p class="text-sm bg-gray-100 dark:bg-gray-700 py-2 rounded text-gray-900 dark:text-white mt-0 text-left pl-0">{{ user.discriminator }}</p>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-0">Date de création</p>
+                            <p class="text-sm bg-gray-100 dark:bg-gray-700 py-2 rounded text-gray-900 dark:text-white mt-0 text-left pl-0">{{ user.created_at.strftime('%d/%m/%Y à %H:%M') if user.created_at else 'N/A' }}</p>
+                        </div>
+                        {% if user.updated_at %}
+                        <div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-0">Dernière mise à jour</p>
+                            <p class="text-sm bg-gray-100 dark:bg-gray-700 py-2 rounded text-gray-900 dark:text-white mt-0 text-left pl-0">{{ user.updated_at.strftime('%d/%m/%Y à %H:%M') }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-3">Actions rapides</h3>
+                    <div class="space-y-2">
+                        <a href="/liked" class="block w-full px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 text-center text-sm">
+                            Voir mes articles aimés
+                        </a>
+                        {% if can_create_articles %}
+                        <a href="/create" class="block w-full px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-600 text-center text-sm">
+                            Créer un article
+                        </a>
+                        <a href="/manage" class="block w-full px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 text-center text-sm">
+                            Gérer mes articles
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-12">
+            <p class="text-gray-600 dark:text-gray-400 mb-4">Vous devez être connecté pour voir votre profil.</p>
+            <a href="/api/auth/login" class="inline-block bg-indigo-600 dark:bg-indigo-500 text-white px-6 py-2 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600">
+                Se connecter avec Discord
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Modale de confirmation -->
+<div id="confirm-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4" id="confirm-title">Confirmer l'action</h3>
+        <p class="text-gray-700 dark:text-gray-300 mb-6" id="confirm-message"></p>
+        <div class="flex justify-end gap-3">
+            <button id="confirm-cancel" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                Annuler
+            </button>
+            <button id="confirm-ok" class="px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-500 rounded-md hover:bg-red-700 dark:hover:bg-red-600 transition-colors">
+                Confirmer
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modale de message -->
+<div id="message-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+        <div class="flex items-start">
+            <div class="flex-shrink-0" id="message-icon"></div>
+            <div class="ml-3 flex-1">
+                <h3 class="text-lg font-semibold mb-2" id="message-title"></h3>
+                <p class="text-sm" id="message-text"></p>
+            </div>
+        </div>
+        <div class="mt-4 flex justify-end">
+            <button id="message-close" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                Fermer
+            </button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+// Charger les warns de l'utilisateur
+document.addEventListener('DOMContentLoaded', async function() {
+    const container = document.querySelector('[data-user-id]');
+    // Utiliser directement la string pour éviter les problèmes de précision avec les grands nombres
+    let userId = container ? container.getAttribute('data-user-id') : null;
+    console.log('Chargement des warns');
+    console.log('  userId initial (data-user-id):', userId, 'type:', typeof userId);
+    console.log('  userId vide?', !userId || userId === '');
+    
+    // Si userId est vide, essayer de le récupérer depuis l'affichage de l'ID Discord dans la page
+    if (!userId || userId === '') {
+        console.log('  Tentative de récupération depuis l\'affichage de l\'ID Discord...');
+        const discordIdElement = document.getElementById('discord-id-display');
+        if (discordIdElement) {
+            userId = discordIdElement.textContent.trim();
+            console.log('  userId récupéré depuis discord-id-display:', userId);
+        } else {
+            // Fallback: chercher dans tous les éléments avec font-mono qui contiennent un ID Discord
+            const fallbackElements = document.querySelectorAll('p.font-mono');
+            for (const el of fallbackElements) {
+                const text = el.textContent.trim();
+                // Vérifier si c'est un ID Discord (18 chiffres)
+                if (/^\d{17,19}$/.test(text)) {
+                    userId = text;
+                    console.log('  userId récupéré depuis fallback font-mono:', userId);
+                    break;
+                }
+            }
+        }
+    }
+    
+    console.log('  userId final:', userId, 'type:', typeof userId);
+    console.log('  userId length:', userId ? userId.length : 'null');
+    console.log('  Container HTML:', container ? container.outerHTML.substring(0, 200) : 'null');
+    console.log('  setSafeHTML disponible:', typeof setSafeHTML !== 'undefined');
+    console.log('  escapeHTML disponible:', typeof escapeHTML !== 'undefined');
+    
+    if (!userId || userId === '') {
+        console.error('Aucun userId trouvé - impossible de charger les warns');
+        const warnsContainer = document.getElementById('warns-container');
+        if (warnsContainer) {
+            setSafeHTML(warnsContainer, `
+                <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 text-center">
+                    <p class="text-yellow-800 dark:text-yellow-300">⚠️ Impossible de charger les avertissements (ID Discord non trouvé)</p>
+                </div>
+            `);
+        }
+        return;
+    }
+    
+    try {
+        console.log(`Requête vers /api/moderation/warns/${userId}`);
+        const response = await fetch(`/api/moderation/warns/${userId}`);
+        console.log('Réponse reçue, status:', response.status);
+        
+        if (!response.ok) {
+            console.error('Erreur HTTP:', response.status, response.statusText);
+            const errorText = await response.text();
+            console.error('Détails de l\'erreur:', errorText);
+            throw new Error(`Erreur HTTP: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Données reçues:', data);
+        console.log('  warn_count:', data.warn_count);
+        console.log('  warns array:', data.warns);
+        console.log('  warns length:', data.warns ? data.warns.length : 'null');
+        
+        // Afficher le nombre de warns
+        const warnCountEl = document.getElementById('warn-count');
+        console.log('warnCountEl trouvé:', !!warnCountEl);
+        if (warnCountEl) {
+            warnCountEl.textContent = data.warn_count || 0;
+            console.log('  Nombre de warns affiché:', data.warn_count || 0);
+        } else {
+            console.error('  Élément warn-count non trouvé!');
+        }
+        
+        // Afficher la liste des warns
+        const warnsContainer = document.getElementById('warns-container');
+        console.log('warnsContainer trouvé:', !!warnsContainer);
+        if (!warnsContainer) {
+            console.error('  Élément warns-container non trouvé!');
+            return;
+        }
+        
+        // Mettre à jour le résumé
+        const warnsSummary = document.getElementById('warns-summary');
+        if (warnsSummary) {
+            const count = data.warn_count || 0;
+            if (count === 0) {
+                warnsSummary.textContent = 'Aucun avertissement';
+                warnsSummary.className = 'text-sm text-green-600 dark:text-green-400 font-medium';
+            } else {
+                warnsSummary.textContent = `${count} avertissement${count > 1 ? 's' : ''}`;
+                warnsSummary.className = 'text-sm text-orange-600 dark:text-orange-400 font-medium';
+            }
+        }
+        
+        // Stocker les warns dans une variable globale pour le tri et la pagination
+        window.allWarns = data.warns || [];
+        
+        // Afficher les contrôles si on a des warns
+        const warnsControls = document.getElementById('warns-controls');
+        if (warnsControls && window.allWarns.length > 0) {
+            warnsControls.style.display = 'flex';
+        }
+        
+        // Fonction pour afficher les warns avec tri et pagination
+        function displayWarns() {
+            const sortOrder = document.getElementById('warns-sort')?.value || 'recent';
+            const limit = document.getElementById('warns-limit')?.value || '10';
+            
+            let warnsToDisplay = [...window.allWarns];
+            
+            // Trier les warns
+            if (sortOrder === 'recent') {
+                warnsToDisplay.sort((a, b) => b.create_time - a.create_time);
+            } else {
+                warnsToDisplay.sort((a, b) => a.create_time - b.create_time);
+            }
+            
+            // Limiter le nombre d'affichage
+            if (limit !== 'all') {
+                warnsToDisplay = warnsToDisplay.slice(0, parseInt(limit));
+            }
+            
+            renderWarnsTable(warnsToDisplay, window.allWarns.length, limit);
+        }
+        
+        // Fonction pour rendre le tableau des warns
+        function renderWarnsTable(warnsToDisplay, totalCount, limit) {
+            // Afficher "Aucun avertissement" seulement si vraiment aucun warn n'existe
+            if (totalCount === 0) {
+                setSafeHTML(warnsContainer, `
+                    <div class="p-6 text-center">
+                        <svg class="w-12 h-12 text-green-500 dark:text-green-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p class="text-base font-semibold text-green-800 dark:text-green-300 mb-1">Aucun avertissement</p>
+                        <p class="text-sm text-green-600 dark:text-green-400">Votre comportement est exemplaire !</p>
+                    </div>
+                `);
+                return;
+            }
+            
+            // Si on a des warns mais qu'aucun n'est affiché (problème de filtrage), afficher un message
+            if (warnsToDisplay.length === 0 && totalCount > 0) {
+                setSafeHTML(warnsContainer, `
+                    <div class="p-6 text-center">
+                        <p class="text-base font-semibold text-orange-800 dark:text-orange-300 mb-1">Aucun avertissement à afficher</p>
+                        <p class="text-sm text-orange-600 dark:text-orange-400">Vérifiez les paramètres de tri et de pagination</p>
+                    </div>
+                `);
+                return;
+            }
+            
+            // En-tête du tableau avec indication du nombre affiché
+            const displayInfo = limit === 'all' 
+                ? `Affichage de ${totalCount} avertissement${totalCount > 1 ? 's' : ''}`
+                : `Affichage de ${warnsToDisplay.length} sur ${totalCount} avertissement${totalCount > 1 ? 's' : ''}`;
+            
+            const tableHeader = `
+                <div class="px-4 py-2 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
+                    <p class="text-xs text-gray-600 dark:text-gray-400">${displayInfo}</p>
+                </div>
+                <div class="grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                    <div class="col-span-1 text-center">#</div>
+                    <div class="col-span-7">Raison</div>
+                    <div class="col-span-4">Date</div>
+                </div>
+            `;
+            
+            const warnsRows = warnsToDisplay.map((warn, index) => {
+                const date = new Date(warn.create_time * 1000);
+                const dateStr = date.toLocaleDateString('fr-FR', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                const timeStr = date.toLocaleTimeString('fr-FR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                const reason = escapeHTML(warn.reason || 'Aucune raison spécifiée');
+                
+                // Numéro séquentiel basé sur la position dans la liste triée (1, 2, 3...)
+                // Les warns sont triés du plus récent au plus vieux par défaut
+                // Le numéro 1 correspond toujours au premier warn affiché (le plus récent si tri récent, le plus vieux si tri ancien)
+                const warnNumber = index + 1;
+                
+                // Alternance de couleurs pour les lignes
+                const isEven = index % 2 === 0;
+                const bgClass = isEven ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-800/50';
+                const hoverClass = 'hover:bg-orange-50 dark:hover:bg-orange-900/10 transition-colors duration-150';
+                
+                return `
+                    <div class="grid grid-cols-12 gap-4 px-4 py-3 ${bgClass} ${hoverClass} border-b border-gray-100 dark:border-gray-700/50" data-warn-id="${warn.id}">
+                        <div class="col-span-1 flex items-center justify-center">
+                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-semibold bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
+                                ${warnNumber}
+                            </span>
+                        </div>
+                        <div class="col-span-7 flex items-center">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <svg class="w-4 h-4 text-orange-500 dark:text-orange-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                </svg>
+                                <span class="text-sm text-gray-900 dark:text-white truncate" title="${reason}">${reason}</span>
+                            </div>
+                        </div>
+                        <div class="col-span-4 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <span class="whitespace-nowrap">${dateStr}</span>
+                            <span class="text-gray-400 dark:text-gray-600">•</span>
+                            <span class="whitespace-nowrap">${timeStr}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            const warnsHTML = tableHeader + warnsRows;
+            setSafeHTML(warnsContainer, warnsHTML);
+        }
+        
+        // Afficher les warns initialement
+        if (!window.allWarns || window.allWarns.length === 0) {
+            console.log('  Aucun warn à afficher');
+            renderWarnsTable([], 0);
+        } else {
+            console.log(`  Affichage de ${window.allWarns.length} warns`);
+            displayWarns();
+            
+            // Ajouter les event listeners pour le tri et la pagination
+            const sortSelect = document.getElementById('warns-sort');
+            const limitSelect = document.getElementById('warns-limit');
+            
+            if (sortSelect) {
+                sortSelect.addEventListener('change', displayWarns);
+            }
+            if (limitSelect) {
+                limitSelect.addEventListener('change', displayWarns);
+            }
+        }
+    } catch (error) {
+        console.error('Erreur lors du chargement des warns:', error);
+        console.error('Stack trace:', error.stack);
+        const warnsContainer = document.getElementById('warns-container');
+        if (warnsContainer) {
+            setSafeHTML(warnsContainer, `
+                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 text-center">
+                    <p class="text-red-800 dark:text-red-300">Erreur lors du chargement des avertissements</p>
+                    <p class="text-xs text-red-600 dark:text-red-400 mt-2">${escapeHTML(error.message || 'Erreur inconnue')}</p>
+                </div>
+            `);
+        }
+        
+        // Afficher aussi une erreur dans le compteur
+        const warnCountEl = document.getElementById('warn-count');
+        if (warnCountEl) {
+            warnCountEl.textContent = '?';
+        }
+    }
+});
+
+// Fonctions pour les modales
+function showConfirmModal(title, message, onConfirm) {
+    const modal = document.getElementById('confirm-modal');
+    const titleEl = document.getElementById('confirm-title');
+    const messageEl = document.getElementById('confirm-message');
+    const cancelBtn = document.getElementById('confirm-cancel');
+    const okBtn = document.getElementById('confirm-ok');
+    
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    modal.classList.remove('hidden');
+    
+    // Nettoyer les anciens event listeners
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    const newOkBtn = okBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+    okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+    
+    newCancelBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+    });
+    
+    newOkBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+        if (onConfirm) onConfirm();
+    });
+    
+    // Fermer en cliquant en dehors
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+        }
+    });
+}
+
+function showMessageModal(type, title, message) {
+    const modal = document.getElementById('message-modal');
+    const titleEl = document.getElementById('message-title');
+    const textEl = document.getElementById('message-text');
+    const iconEl = document.getElementById('message-icon');
+    const closeBtn = document.getElementById('message-close');
+    
+    titleEl.textContent = title;
+    textEl.textContent = message;
+    
+    // Définir l'icône et les couleurs selon le type
+    if (type === 'success') {
+        titleEl.className = 'text-lg font-semibold mb-2 text-green-800 dark:text-green-300';
+        textEl.className = 'text-sm text-green-700 dark:text-green-400';
+        iconEl.innerHTML = '<svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+    } else if (type === 'error') {
+        titleEl.className = 'text-lg font-semibold mb-2 text-red-800 dark:text-red-300';
+        textEl.className = 'text-sm text-red-700 dark:text-red-400';
+        iconEl.innerHTML = '<svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+    } else {
+        titleEl.className = 'text-lg font-semibold mb-2 text-gray-900 dark:text-white';
+        textEl.className = 'text-sm text-gray-700 dark:text-gray-300';
+        iconEl.innerHTML = '<svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+    }
+    
+    modal.classList.remove('hidden');
+    
+    // Nettoyer les anciens event listeners
+    const newCloseBtn = closeBtn.cloneNode(true);
+    closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+    
+    newCloseBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+    });
+    
+    // Fermer en cliquant en dehors
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+        }
+    });
+}
+
+
+</script>
+
+{% endblock %}
+
